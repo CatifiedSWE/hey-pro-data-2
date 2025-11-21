@@ -1,16 +1,21 @@
+import { Poppins } from 'next/font/google'
 import './globals.css'
 
+const poppins = Poppins({ 
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 export const metadata = {
-  title: 'Next.js MongoDB Template',
-  description: 'A simple template with App Router, MongoDB, and shadcn/ui',
+  title: 'HeyProData',
+  description: 'Professional networking for creative industries',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-      </body>
+      <body className={poppins.className}>{children}</body>
     </html>
   )
 }
