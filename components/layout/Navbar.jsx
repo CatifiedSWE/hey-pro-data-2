@@ -3,13 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import NotificationModal from '@/components/modals/NotificationModal';
 import ChatModal from '@/components/modals/ChatModal';
+import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showExploreMenu, setShowExploreMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  };
 
   return (
     <>
@@ -93,14 +102,36 @@ export default function Navbar() {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              {/* Profile Avatar */}
-              <Link href="/profile" className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" 
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </Link>
+              {/* Profile Avatar with Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden focus:ring-2 focus:ring-[#FA6E80]"
+                >
+                  <img 
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" 
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+                {showProfileMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <Link href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      View Profile
+                    </Link>
+                    <Link href="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      Settings
+                    </Link>
+                    <hr className="my-2" />
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

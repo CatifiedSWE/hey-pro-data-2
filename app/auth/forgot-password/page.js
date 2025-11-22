@@ -1,0 +1,114 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
+
+export default function ForgotPasswordPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setSuccess(false)
+
+    try {
+      // Request password reset - this will send OTP to email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Redirect to OTP page
+      router.push(`/auth/otp?email=${encodeURIComponent(email)}&type=reset`)
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background gradient */}
+      <div 
+        className="absolute inset-0 -z-10"
+        style={{
+          background: 'conic-gradient(from 0deg at 50% 50%, #FA6E80 0deg, #6A89BE 144deg, #85AAB7 216deg, #31A7AC 360deg)'
+        }}
+      />
+
+      {/* Form Container */}
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-10 md:p-12">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <Image 
+            src="/logo/logo.svg" 
+            alt="HPD Logo" 
+            width={80} 
+            height={55}
+            priority
+          />
+        </div>
+
+        <h2 className="text-2xl font-bold text-black text-center mb-3">
+          Forgot Password?
+        </h2>
+        <p className="text-gray-600 text-center mb-8">
+          Enter your email address and we'll send you a verification code to reset your password.
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+            Verification code sent! Check your email.
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-[#FA6E80] text-black placeholder-gray-400 transition-colors"
+              required
+              disabled={loading}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 rounded-xl font-semibold text-white text-lg transition-all transform hover:scale-[1.02] bg-[#FA6E80] hover:bg-[#ff5a75] cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Sending...' : 'Send Verification Code'}
+          </button>
+        </form>
+
+        <div className="text-center mt-6">
+          <Link href="/auth/login" className="text-[#0066ff] hover:underline text-sm font-medium">
+            Back to Login
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}

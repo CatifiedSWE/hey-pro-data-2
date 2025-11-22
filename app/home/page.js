@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import FeedContainer from '@/components/feed/FeedContainer';
+import { supabase } from '@/lib/supabase';
 
 // Dummy post data
 const dummyPosts = [
@@ -41,6 +44,59 @@ const dummyPosts = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthAndProfile = async () => {
+      try {
+        // Check if user is authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // Not logged in, redirect to login
+          router.push('/auth/login');
+          return;
+        }
+
+        // Check if user has completed their profile
+        const { data: profile, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking profile:', error);
+        }
+
+        // If no profile exists, redirect to form page
+        if (!profile) {
+          router.push('/auth/form');
+          return;
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        router.push('/auth/login');
+      }
+    };
+
+    checkAuthAndProfile();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FA6E80] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <MainLayout>
       <FeedContainer posts={dummyPosts} />

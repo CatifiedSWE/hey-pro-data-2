@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -10,6 +11,8 @@ export default function SignUpPage() {
     email: '',
     password: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const [passwordValidation, setPasswordValidation] = useState({
     minLength: false,
@@ -42,13 +45,60 @@ export default function SignUpPage() {
     )
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isPasswordValid()) {
-      alert('Please ensure your password meets all requirements')
+      setError('Please ensure your password meets all requirements')
       return
     }
-    router.push('/home')
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // Sign up with email and password - this will send OTP to email
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Redirect to OTP page with email
+      router.push(`/auth/otp?email=${encodeURIComponent(formData.email)}&type=signup`)
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      }
+    } catch (err) {
+      setError('Failed to sign up with Google. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -57,12 +107,18 @@ export default function SignUpPage() {
       <div className="flex-1 flex items-center justify-center bg-white px-8">
         <div className="w-full max-w-md">
           <div className="mb-8">
- <img src="/logo/logo.svg" alt="Logo" width="60" className="mb-8" />
+            <img src="/logo/logo.svg" alt="Logo" width="60" className="mb-8" />
           </div>
 
           <h2 className="text-3xl font-medium mb-8">
             Sign up to <span className="text-gray-900">HeyPro</span><span className="text-[#00bcd4]">Data</span>
           </h2>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -73,6 +129,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -84,6 +141,7 @@ export default function SignUpPage() {
                 onChange={handlePasswordChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -95,9 +153,10 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#ff6b9d] hover:bg-[#ff5a8f] text-white py-3 rounded-lg font-medium mb-6 transition"
+              disabled={loading || !isPasswordValid()}
+              className="w-full bg-[#ff6b9d] hover:bg-[#ff5a8f] text-white py-3 rounded-lg font-medium mb-6 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign up
+              {loading ? 'Signing up...' : 'Sign up'}
             </button>
           </form>
 
@@ -111,13 +170,20 @@ export default function SignUpPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            <button 
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <img src="/assets/google-icon.png" width="22" alt="Google" />
-               Google
+              Google
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            <button 
+              disabled
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg opacity-50 cursor-not-allowed"
+            >
               <img src="/assets/apple-icon.png" width="20" alt="Apple" />
-               Apple
+              Apple
             </button>
           </div>
 

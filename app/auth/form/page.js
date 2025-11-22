@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function FormPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     firstName: '',
     surname: '',
@@ -12,6 +15,36 @@ export default function FormPage() {
     country: '',
     city: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [currentUser, setCurrentUser] = useState(null)
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/auth/login')
+        return
+      }
+
+      setCurrentUser(session.user)
+
+      // Check if profile already exists
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single()
+
+      // If profile exists, redirect to home
+      if (profile) {
+        router.push('/home')
+      }
+    }
+    checkAuth()
+  }, [router])
 
   // List of countries with priority to UAE and Middle East
   const countries = [
@@ -42,11 +75,47 @@ export default function FormPage() {
                       formData.country !== '' && 
                       formData.city.trim() !== ''
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (isFormValid) {
-      console.log('Form submitted:', formData)
-      // Handle form submission
+    if (!isFormValid) return
+
+    setLoading(true)
+    setError('')
+
+    try {
+      if (!currentUser) {
+        setError('User not authenticated')
+        setLoading(false)
+        return
+      }
+
+      // Save profile to Supabase
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([
+          {
+            user_id: currentUser.id,
+            first_name: formData.firstName.trim(),
+            surname: formData.surname.trim(),
+            alias_first_name: formData.aliasFirstName.trim() || null,
+            alias_surname: formData.aliasSurname.trim() || null,
+            country: formData.country,
+            city: formData.city.trim()
+          }
+        ])
+        .select()
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Profile created successfully, redirect to home
+      router.push('/home')
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
     }
   }
 
@@ -72,6 +141,12 @@ export default function FormPage() {
             priority
           />
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Legal Name Section */}
@@ -153,14 +228,14 @@ export default function FormPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
             className={`w-full py-4 rounded-xl font-semibold text-white text-lg transition-all transform hover:scale-[1.02] ${
-              isFormValid 
+              isFormValid && !loading
                 ? 'bg-[#FA6E80] hover:bg-[#ff5a75] cursor-pointer shadow-lg' 
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
-            Create your profile
+            {loading ? 'Creating profile...' : 'Create your profile'}
           </button>
         </form>
       </div>

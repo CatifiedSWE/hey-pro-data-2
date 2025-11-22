@@ -1,20 +1,106 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     keepLoggedIn: false
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        // Check if profile exists
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single()
+
+        if (profile) {
+          router.push('/home')
+        } else {
+          router.push('/auth/form')
+        }
+      }
+    }
+    checkUser()
+
+    // Check for error in URL
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'authentication_failed') {
+      setError('Authentication failed. Please try again.')
+    }
+  }, [router, searchParams])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    router.push('/home')
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Check if user has completed their profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single()
+
+        if (profile) {
+          router.push('/home')
+        } else {
+          router.push('/auth/form')
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      }
+    } catch (err) {
+      setError('Failed to sign in with Google. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,6 +121,12 @@ export default function LoginPage() {
             Login to <span className="text-gray-900">HeyPro</span><span className="text-[#00bcd4]">Data</span>
           </h2>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <input
@@ -44,6 +136,7 @@ export default function LoginPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -55,6 +148,7 @@ export default function LoginPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -65,19 +159,21 @@ export default function LoginPage() {
                   checked={formData.keepLoggedIn}
                   onChange={(e) => setFormData({ ...formData, keepLoggedIn: e.target.checked })}
                   className="mr-2"
+                  disabled={loading}
                 />
                 Keep me logged in
               </label>
-              <Link href="#" className="text-[#00bcd4] hover:underline">
+              <Link href="/auth/forgot-password" className="text-[#00bcd4] hover:underline">
                 Forgot password?
               </Link>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#ff6b9d] hover:bg-[#ff5a8f] text-white py-3 rounded-lg font-medium mb-6 transition"
+              disabled={loading}
+              className="w-full bg-[#ff6b9d] hover:bg-[#ff5a8f] text-white py-3 rounded-lg font-medium mb-6 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
@@ -91,12 +187,19 @@ export default function LoginPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-               <img src="/assets/google-icon.png" width="20" alt="Apple" />
+            <button 
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <img src="/assets/google-icon.png" width="20" alt="Google" />
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-             <img src="/assets/apple-icon.png" width="20" alt="Apple" />
+            <button 
+              disabled
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg opacity-50 cursor-not-allowed"
+            >
+              <img src="/assets/apple-icon.png" width="20" alt="Apple" />
               Apple
             </button>
           </div>
