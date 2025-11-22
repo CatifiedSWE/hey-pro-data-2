@@ -57,7 +57,7 @@ export default function SignUpPage() {
       <div className="flex-1 flex items-center justify-center bg-white px-8">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <img src="https://customer-assets.emergentagent.com/mnt/data/signup.png" alt="Logo" width="60" className="mb-8" />
+ <img src="/logo/logo.svg" alt="Logo" width="60" className="mb-8" />
           </div>
 
           <h2 className="text-3xl font-medium mb-8">
@@ -112,12 +112,12 @@ export default function SignUpPage() {
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-              <img src="https://www.svgrepo.com/show/355037/google.svg" width="22" alt="Google" />
-              Google
+              <img src="/assets/google-icon.png" width="22" alt="Google" />
+               Google
             </button>
             <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-              <img src="https://www.svgrepo.com/show/303128/apple-logo.svg" width="20" alt="Apple" />
-              Apple
+              <img src="/assets/apple-icon.png" width="20" alt="Apple" />
+               Apple
             </button>
           </div>
 
