@@ -93,20 +93,81 @@ The app will automatically redirect to the login page at `/auth/login`
 │   │       └── page.js            # OTP verification page
 │   ├── home/
 │   │   └── page.js                # Home dashboard
+│   ├── explore/
+│   │   └── page.js                # Explore content and projects
+│   ├── gigs/
+│   │   └── page.js                # Job listings and opportunities
+│   ├── whats-on/
+│   │   └── page.js                # Events and happenings
+│   ├── community/
+│   │   └── page.js                # Forums and discussions
+│   ├── profile/
+│   │   └── page.js                # User profile page
+│   ├── saved/
+│   │   └── page.js                # Bookmarked content
+│   ├── help/
+│   │   └── page.js                # Help and support
+│   ├── settings/
+│   │   └── page.js                # Account settings
 │   └── api/
 │       └── [[...path]]/
 │           └── route.js           # API routes
 ├── components/
-│   └── ui/                        # Shadcn UI components
+│   ├── ui/                        # Shadcn UI components
+│   ├── layout/                    # Layout components
+│   │   ├── Navbar.jsx             # Top navigation bar
+│   │   ├── LeftSidebar.jsx        # User profile widget
+│   │   ├── RightSidebar.jsx       # Profiles widget
+│   │   └── MainLayout.jsx         # Three-column layout wrapper
+│   ├── modals/                    # Modal components
+│   │   ├── NotificationModal.jsx  # Notifications overlay
+│   │   └── ChatModal.jsx          # Chat/messaging overlay
+│   ├── widgets/                   # Reusable widget components
+│   │   ├── UserProfileWidget.jsx  # User profile card
+│   │   └── ViewProfilesWidget.jsx # Profile list widget
+│   └── feed/                      # Feed components
+│       ├── PostCard.jsx           # Individual post card
+│       └── FeedContainer.jsx      # Feed with infinite scroll
 ├── lib/
-│   └── utils.js                   # Utility functions
+│   ├── utils.js                   # Utility functions
+│   └── constants/
+│       └── theme.js               # Theme colors and design tokens
 ├── public/
 │   └── logo/
 │       └── logo.svg               # HPD Logo
 └── tailwind.config.js             # Tailwind configuration
 ```
 
+## 🏗️ Layout Architecture
+
+### Three-Column Layout
+The main application uses a responsive three-column layout:
+- **Left Sidebar**: User profile widget with quick navigation (Profile, Saved, Help, Settings)
+- **Center Feed**: Main content area displaying posts, projects, or page-specific content
+- **Right Sidebar**: "View Profiles" widget showing suggested connections
+
+### Responsive Behavior
+- **Desktop (1920px+)**: All three columns visible
+- **Tablet (768px-1919px)**: Center content + sidebar(s) based on priority
+- **Mobile (375px-767px)**: Center content only, sidebars accessible via menu
+
+### Reusable Components
+- **Navbar**: Top navigation bar with main menu items and action buttons
+- **Modals**: Overlay components for Notifications and Chat (better UX for mobile)
+- **Widgets**: Modular components (UserProfileWidget, ViewProfilesWidget)
+- **Feed Components**: PostCard and FeedContainer for content display
+
 ## 🎨 Design Features
+
+### Color Palette
+The application uses a consistent color scheme defined in `/lib/constants/theme.js`:
+- **Primary Button**: #FA6E80 (Coral Pink)
+- **Background Grey**: #F8F8F8
+- **Gradient Colors**: 
+  - Coral Pink: #FA6E80
+  - Steel Blue: #6A89BE
+  - Teal Blue: #85AAB7
+  - Cyan Teal: #31A7AC
 
 ### Login Page
 - Left side: Beautiful gradient background (purple → blue → cyan)
@@ -186,12 +247,27 @@ Real-time feedback shows:
 
 ## 🎯 Routes
 
+### Authentication Routes
 - `/` - Redirects to login page
 - `/auth/login` - Login page (default)
 - `/auth/sign-up` - Sign-up page with password validation
 - `/auth/form` - Profile creation form with validation
 - `/auth/otp` - OTP verification page with auto-focus
-- `/home` - Home dashboard (after successful authentication)
+
+### Main Application Routes
+- `/home` - Home dashboard with feed (three-column layout)
+- `/explore` - Discover content, projects, and talent
+- `/gigs` - Browse and post job opportunities
+- `/whats-on` - Events, screenings, and industry happenings
+- `/community` - Forums and community discussions
+- `/profile` - User profile view and edit
+- `/saved` - Bookmarked content and saved items
+- `/help` - Help center and support resources
+- `/settings` - Account settings and preferences
+
+### Modal Routes (Overlays)
+- Notifications - Triggered by notification bell icon
+- Chat/Messages - Triggered by chat icon
 
 ## 🛠️ Technologies Used
 
@@ -260,7 +336,7 @@ Currently using React's built-in state management:
 
 Potential features to add:
 - [ ] Backend authentication with JWT
-- [ ] MongoDB integration for user storage
+- [ ] Supabase integration for database and authentication
 - [ ] Email verification
 - [ ] Password reset functionality
 - [ ] Social authentication implementation
