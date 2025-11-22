@@ -14,6 +14,24 @@ A specialized professional networking and talent marketplace built for the film,
   - Social authentication options (Google, Apple)
   - Responsive design for mobile and desktop
 
+- **Profile Creation Form**
+  - Beautiful conic gradient background
+  - Legal name fields (First name, Surname) - required
+  - Optional alias name fields
+  - Country selection (15 countries with UAE & Middle East priority)
+  - City input field
+  - Form validation - button disabled until all required fields are filled
+  - Responsive design with smooth animations
+
+- **OTP Verification Page**
+  - Secure OTP input with 5 boxes
+  - Numbers-only input validation
+  - Auto-focus to next box on digit entry
+  - Backspace navigation to previous box
+  - Paste support for OTP codes
+  - Visual feedback and security warning
+  - Submit button enabled only when all digits entered
+
 - **Password Validation**
   - Minimum of 8 characters
   - At least one uppercase letter
@@ -62,13 +80,17 @@ The app will automatically redirect to the login page at `/auth/login`
 /app
 ├── app/
 │   ├── page.js                    # Root page (redirects to login)
-│   ├── layout.js                  # Root layout
+│   ├── layout.js                  # Root layout (Poppins font)
 │   ├── globals.css                # Global styles
 │   ├── auth/
 │   │   ├── login/
 │   │   │   └── page.js            # Login page
-│   │   └── sign-up/
-│   │       └── page.js            # Sign-up page with validation
+│   │   ├── sign-up/
+│   │   │   └── page.js            # Sign-up page with validation
+│   │   ├── form/
+│   │   │   └── page.js            # Profile creation form
+│   │   └── otp/
+│   │       └── page.js            # OTP verification page
 │   ├── home/
 │   │   └── page.js                # Home dashboard
 │   └── api/
@@ -78,6 +100,9 @@ The app will automatically redirect to the login page at `/auth/login`
 │   └── ui/                        # Shadcn UI components
 ├── lib/
 │   └── utils.js                   # Utility functions
+├── public/
+│   └── logo/
+│       └── logo.svg               # HPD Logo
 └── tailwind.config.js             # Tailwind configuration
 ```
 
@@ -99,6 +124,37 @@ The app will automatically redirect to the login page at `/auth/login`
 - Button disabled until password meets all criteria
 - Social sign-up options
 - Link to login page
+
+### Profile Creation Form (`/auth/form`)
+- Vibrant conic gradient background (#FA6E80 → #6A89BE → #85AAB7 → #31A7AC)
+- Centered white card with backdrop blur effect
+- HPD logo from assets
+- Legal name fields (required): First name, Surname
+- Alias name fields (optional): Alias first name, Alias surname
+- Location section:
+  - Country dropdown with 15 countries (UAE & Middle East priority)
+  - City text input
+- Smart validation: Submit button disabled until all required fields filled
+- Pink (#FA6E80) submit button
+- Poppins font, black text
+- Fully responsive with smooth transitions
+
+### OTP Verification Page (`/auth/otp`)
+- Same vibrant conic gradient background
+- Centered white card design
+- HPD logo
+- Clear instructions with email display
+- 5 OTP input boxes with smart features:
+  - Only accepts numeric input (0-9)
+  - Auto-focus to next box when digit entered
+  - Backspace navigates to previous box
+  - Arrow key navigation support
+  - Paste support for full OTP codes
+  - Visual focus states
+- Security warning message with alert icon
+- Pink (#FA6E80) submit button
+- Button enabled only when all 5 digits entered
+- Fully responsive design
 
 ### Home Page
 - Header with logo and logout button
@@ -133,6 +189,8 @@ Real-time feedback shows:
 - `/` - Redirects to login page
 - `/auth/login` - Login page (default)
 - `/auth/sign-up` - Sign-up page with password validation
+- `/auth/form` - Profile creation form with validation
+- `/auth/otp` - OTP verification page with auto-focus
 - `/home` - Home dashboard (after successful authentication)
 
 ## 🛠️ Technologies Used
@@ -164,6 +222,14 @@ Primary Blue: #2563eb (blue-600)
 Accent Cyan: #06b6d4 (cyan-400)
 Text Dark: #1f2937 (gray-800)
 Text Light: #6b7280 (gray-600)
+
+/* New Form & OTP Pages */
+Coral Pink: #FA6E80 (button color)
+Steel Blue: #6A89BE (gradient)
+Teal Blue: #85AAB7 (gradient)
+Cyan Teal: #31A7AC (gradient)
+Text Black: #000000
+Conic Gradient: from 0deg at 50% 50%, #FA6E80 0deg, #6A89BE 144deg, #85AAB7 216deg, #31A7AC 360deg
 ```
 
 ## 🚦 User Flow
