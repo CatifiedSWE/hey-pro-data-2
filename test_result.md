@@ -174,13 +174,16 @@ backend:
     implemented: true
     working: "pending_test"
     file: "/app/app/auth/callback/page.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "pending_test"
         agent: "main"
         comment: "Fixed false error showing during Google OAuth login/signup. Added try-catch wrapper around profile checks. Now treats profile check errors as 'no profile' instead of authentication failure. This prevents blocking user flow when profile table has issues."
+      - working: "pending_test"
+        agent: "main"
+        comment: "IMPROVED FIX: User reported still seeing false error messages during Google OAuth. Root cause was profile check errors bubbling up to outer catch block. Refactored to use separate checkProfileAndRedirect function that isolates profile errors. Added isRedirecting flag to prevent showing errors after redirect initiated. Profile errors now logged as 'non-blocking' and never trigger error UI. Only actual authentication failures (code exchange errors, session errors) show error messages."
 
   - task: "Password Reset Flow - No Redirect"
     implemented: true
@@ -265,3 +268,5 @@ agent_communication:
     message: "Fixed two new authentication issues: 1) Google OAuth callback now has robust error handling to prevent false errors when checking user profiles - wraps profile check in try-catch and treats errors as 'no profile' instead of blocking flow. 2) Password reset now shows success message on same page without redirecting to OTP page - displays 'A password reset link has been sent to [email]' message."
   - agent: "main"
     message: "Implemented 'Keep me logged in' functionality and optimized loading experience: 1) Created adaptive storage system that uses localStorage when 'Keep me logged in' is checked, sessionStorage when unchecked. 2) Implemented one-time auth check per session to prevent multiple loading screens and flashing. 3) Session persists across browser tabs but expires when browser closes if 'Keep me logged in' is unchecked. 4) OAuth logins default to 'keep logged in' behavior."
+  - agent: "main"
+    message: "Fixed Google OAuth false error message issue. Problem: Profile check errors were bubbling up to outer catch block, causing error UI to display briefly even when authentication succeeded. Solution: Refactored callback page to use isolated checkProfileAndRedirect function that prevents profile errors from triggering error display. Added isRedirecting flag to ensure error UI never shows after redirect is initiated. Profile errors are now logged as non-blocking. Only genuine authentication failures (code exchange, session errors) show error messages to users."

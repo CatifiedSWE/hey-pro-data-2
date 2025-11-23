@@ -8,6 +8,7 @@ export default function AuthCallbackPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState('')
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -35,31 +36,8 @@ export default function AuthCallbackPage() {
             // Mark auth as verified for this session
             sessionStorage.setItem('heyprodata-auth-verified', 'true')
             
-            // Check if user has completed their profile
-            try {
-              const { data: profile, error: profileError } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('user_id', data.session.user.id)
-                .maybeSingle()
-
-              // Only log actual database errors, not "no rows" cases
-              if (profileError && profileError.code !== 'PGRST116') {
-                console.error('Error checking profile:', profileError)
-              }
-
-              // If no profile exists, redirect to form page
-              // Treat any error as "no profile" to avoid blocking user flow
-              if (!profile || profileError) {
-                router.push('/auth/form')
-              } else {
-                router.push('/home')
-              }
-            } catch (profileCheckError) {
-              // If profile check fails entirely, assume no profile and continue
-              console.error('Profile check exception:', profileCheckError)
-              router.push('/auth/form')
-            }
+            // Check profile and redirect - don't let errors bubble up
+            await checkProfileAndRedirect(data.session.user.id)
           } else {
             router.push('/auth/login')
           }
@@ -69,7 +47,10 @@ export default function AuthCallbackPage() {
           
           if (sessionError) {
             console.error('Error getting session:', sessionError)
-            router.push('/auth/login?error=authentication_failed')
+            setError(sessionError.message)
+            setTimeout(() => {
+              router.push('/auth/login?error=authentication_failed')
+            }, 2000)
             return
           }
 
@@ -80,46 +61,58 @@ export default function AuthCallbackPage() {
             // Mark auth as verified for this session
             sessionStorage.setItem('heyprodata-auth-verified', 'true')
             
-            // Check if user has completed their profile
-            try {
-              const { data: profile, error: profileError } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .maybeSingle()
-
-              // Only log actual database errors, not "no rows" cases
-              if (profileError && profileError.code !== 'PGRST116') {
-                console.error('Error checking profile:', profileError)
-              }
-
-              // If no profile exists, redirect to form page
-              // Treat any error as "no profile" to avoid blocking user flow
-              if (!profile || profileError) {
-                router.push('/auth/form')
-              } else {
-                router.push('/home')
-              }
-            } catch (profileCheckError) {
-              // If profile check fails entirely, assume no profile and continue
-              console.error('Profile check exception:', profileCheckError)
-              router.push('/auth/form')
-            }
+            // Check profile and redirect - don't let errors bubble up
+            await checkProfileAndRedirect(session.user.id)
           } else {
             router.push('/auth/login')
           }
         }
       } catch (error) {
-        console.error('Callback error:', error)
-        setError(error.message || 'Authentication failed')
-        setTimeout(() => {
-          router.push('/auth/login?error=authentication_failed')
-        }, 2000)
+        // Only show error if we haven't already started redirecting
+        if (!isRedirecting) {
+          console.error('Callback error:', error)
+          setError(error.message || 'Authentication failed')
+          setTimeout(() => {
+            router.push('/auth/login?error=authentication_failed')
+          }, 2000)
+        }
+      }
+    }
+
+    // Separate function to check profile and redirect
+    // This ensures profile errors don't bubble up to the main try-catch
+    const checkProfileAndRedirect = async (userId) => {
+      try {
+        setIsRedirecting(true)
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle()
+
+        // Only log actual database errors, not "no rows" cases
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.log('Profile check error (non-blocking):', profileError)
+        }
+
+        // If no profile exists, redirect to form page
+        // Treat any error as "no profile" to avoid blocking user flow
+        if (!profile) {
+          router.push('/auth/form')
+        } else {
+          router.push('/home')
+        }
+      } catch (profileCheckError) {
+        // If profile check fails entirely, assume no profile and continue
+        // This is a non-blocking error - authentication succeeded
+        console.log('Profile check exception (non-blocking):', profileCheckError)
+        router.push('/auth/form')
       }
     }
 
     handleCallback()
-  }, [router, searchParams])
+  }, [router, searchParams, isRedirecting])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
