@@ -5,9 +5,18 @@ import GigsList from '@/components/gigs/GigsList';
 import ApplicationsTab from '@/components/gigs/ApplicationsTab';
 import AvailabilityCheckTab from '@/components/gigs/AvailabilityCheckTab';
 import ContactListTab from '@/components/gigs/ContactListTab';
+import GigFilters from '@/components/gigs/GigFilters';
+
+// Available gigs for filtering
+const availableGigs = [
+  { id: '1', title: '4 Video Editors for Shortfilm' },
+  { id: '2', title: '3 Lighting operator for Documentary' },
+  { id: '3', title: '4 Camera Operator for Shortfilm' },
+];
 
 export default function ManageGigsPage() {
   const [activeTab, setActiveTab] = useState('gigs');
+  const [selectedGig, setSelectedGig] = useState('1');
 
   const tabs = [
     { id: 'gigs', label: 'Gigs' },
@@ -42,12 +51,21 @@ export default function ManageGigsPage() {
           ))}
         </div>
 
+        {/* Filters - Show for all tabs except Gigs */}
+        {activeTab !== 'gigs' && (
+          <GigFilters
+            selectedGig={selectedGig}
+            onGigChange={setSelectedGig}
+            gigs={availableGigs}
+          />
+        )}
+
         {/* Tab Content */}
         <div className="mt-6">
           {activeTab === 'gigs' && <GigsList />}
-          {activeTab === 'application' && <ApplicationsTab />}
-          {activeTab === 'availability' && <AvailabilityCheckTab />}
-          {activeTab === 'contact' && <ContactListTab />}
+          {activeTab === 'application' && <ApplicationsTab selectedGig={selectedGig} />}
+          {activeTab === 'availability' && <AvailabilityCheckTab selectedGig={selectedGig} />}
+          {activeTab === 'contact' && <ContactListTab selectedGig={selectedGig} />}
         </div>
       </div>
     </div>

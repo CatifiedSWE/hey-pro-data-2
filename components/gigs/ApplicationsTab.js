@@ -5,9 +5,8 @@ import ApplicantTable from './ApplicantTable';
 // Dummy data for gigs and applicants
 const dummyGigs = [
   {
-    id: 1,
+    id: '1',
     title: '4 Video Editors for Shortfilm',
-    dates: '2025 Sep 12, 15, 16-25 2026 Jan 11-13',
     applicants: [
       {
         id: 1,
@@ -63,9 +62,8 @@ const dummyGigs = [
     ],
   },
   {
-    id: 2,
+    id: '2',
     title: '3 Lighting operator for Documentary',
-    dates: '2025 Sep 12, 15, 16-25 2026 Jan 11-13',
     applicants: [
       {
         id: 4,
@@ -122,7 +120,12 @@ const dummyGigs = [
   },
 ];
 
-export default function ApplicationsTab() {
+export default function ApplicationsTab({ selectedGig }) {
+  // Filter data based on selected gig
+  const filteredGigs = selectedGig
+    ? dummyGigs.filter((gig) => gig.id === selectedGig)
+    : dummyGigs;
+
   return (
     <div className="space-y-8">
       {/* Action Buttons */}
@@ -136,40 +139,8 @@ export default function ApplicationsTab() {
       </div>
 
       {/* Gigs with Applicants */}
-      {dummyGigs.map((gig) => (
+      {filteredGigs.map((gig) => (
         <div key={gig.id} className="space-y-4">
-          {/* Gig Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-black">
-              {gig.title}
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span className="font-medium">2025</span>
-              <span className="bg-[#FA6E80] text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                Sep
-              </span>
-              <span>12, 15, 16-25</span>
-              <span className="font-medium ml-2">2026</span>
-              <span className="bg-[#FA6E80] text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                Jan
-              </span>
-              <span>11-13</span>
-            </div>
-          </div>
-
           {/* Applicants Table */}
           <ApplicantTable applicants={gig.applicants} />
         </div>

@@ -1,73 +1,80 @@
 'use client';
 
 // Dummy data for availability check
-const dummyAvailability = [
-  {
-    id: 1,
-    title: '4 Camera Operator for Shortfilm',
-    crew: [
-      {
-        id: 1,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=10',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 2,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=11',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 3,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=12',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 4,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=13',
-        availability: Array(7).fill('N/A'),
-      },
-    ],
-  },
-  {
-    id: 2,
-    title: '4 Lighting Operator for Shortfilm',
-    crew: [
-      {
-        id: 5,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=14',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 6,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=15',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 7,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=16',
-        availability: Array(7).fill('N/A'),
-      },
-      {
-        id: 8,
-        name: 'Olivia Martin',
-        avatar: 'https://i.pravatar.cc/150?img=17',
-        availability: Array(7).fill('N/A'),
-      },
-    ],
-  },
-];
+const dummyAvailability = {
+  '1': [
+    {
+      id: 1,
+      title: '4 Camera Operator for Shortfilm',
+      crew: [
+        {
+          id: 1,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=10',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 2,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=11',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 3,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=12',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 4,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=13',
+          availability: Array(7).fill('N/A'),
+        },
+      ],
+    },
+  ],
+  '2': [
+    {
+      id: 2,
+      title: '4 Lighting Operator for Documentary',
+      crew: [
+        {
+          id: 5,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=14',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 6,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=15',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 7,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=16',
+          availability: Array(7).fill('N/A'),
+        },
+        {
+          id: 8,
+          name: 'Olivia Martin',
+          avatar: 'https://i.pravatar.cc/150?img=17',
+          availability: Array(7).fill('N/A'),
+        },
+      ],
+    },
+  ],
+};
 
-export default function AvailabilityCheckTab() {
+export default function AvailabilityCheckTab({ selectedGig }) {
+  // Get availability data for selected gig
+  const availabilityData = dummyAvailability[selectedGig] || dummyAvailability['1'];
+
   return (
     <div className="space-y-8">
-      {dummyAvailability.map((section) => (
+      {availabilityData.map((section) => (
         <div key={section.id} className="space-y-4">
           {/* Section Title */}
           <h2 className="text-xl font-semibold text-black">

@@ -68,7 +68,7 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-                <Link href="/gigs" className="text-gray-700 hover:text-gray-900">Gigs</Link>
+                <Link href="/gigs/manage" className="text-gray-700 hover:text-gray-900">Gigs</Link>
                 <Link href="/whats-on" className="text-gray-700 hover:text-gray-900">What's on</Link>
                 <Link href="/community" className="text-gray-700 hover:text-gray-900">Community</Link>
                 <Link href="/profile" className="text-gray-700 hover:text-gray-900">Profile</Link>

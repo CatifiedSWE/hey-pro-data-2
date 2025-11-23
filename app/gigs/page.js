@@ -1,18 +1,26 @@
-/**
- * Gigs Page
- * 
- * This is the Gigs page where users can browse and post job opportunities,
- * freelance gigs, and project listings in the creative industry.
- */
+'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+/**
+ * Gigs Page - Redirects to Manage Gigs
+ * 
+ * This page redirects users to the main gig management interface.
+ */
 export default function GigsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/gigs/manage');
+  }, [router]);
+
   return (
-    <div className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-4">Gigs</h1>
-      <p className="text-gray-600">
-        Placeholder for the Gigs page. This page will display job listings, freelance opportunities,
-        and project postings. Users can browse, filter, and apply for gigs.
-      </p>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FA6E80]"></div>
+        <p className="mt-4 text-gray-600">Redirecting to Manage Gigs...</p>
+      </div>
     </div>
   );
 }

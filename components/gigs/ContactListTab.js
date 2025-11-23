@@ -1,79 +1,83 @@
 'use client';
 
 // Dummy data for contact list
-const dummyContacts = [
-  {
-    id: 1,
-    gigTitle: '4 Video Editors for Shortfilm',
-    dates: '2025 Sep • 12, 15, 16–25 • 2026 Jan 11–13',
-    departments: [
-      {
-        id: 1,
-        name: 'Camera',
-        subTitle: '4 Camera Operator for Shortfilm',
-        contacts: [
-          {
-            id: 1,
-            role: 'Camera Operator',
-            company: 'Central Films',
-            name: 'Aarav Mehta',
-            avatar: 'https://i.pravatar.cc/150?img=20',
-            phone: '+91 9876543210',
-            email: 'aaravmehta12@gmail.com',
-          },
-          {
-            id: 2,
-            role: 'Camera Operator',
-            company: 'Central Films',
-            name: 'Aarav Mehta',
-            avatar: 'https://i.pravatar.cc/150?img=21',
-            phone: '+91 9876543210',
-            email: 'aaravmehta12@gmail.com',
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: 'Lighting',
-        subTitle: '4 Lighting Operator for Shortfilm',
-        contacts: [
-          {
-            id: 3,
-            role: 'Lighting Operator',
-            company: 'Central Films',
-            name: 'Aarav Mehta',
-            avatar: 'https://i.pravatar.cc/150?img=22',
-            phone: '+91 9876543210',
-            email: 'aaravmehta12@gmail.com',
-          },
-          {
-            id: 4,
-            role: 'Lighting Operator',
-            company: 'Central Films',
-            name: 'Aarav Mehta',
-            avatar: 'https://i.pravatar.cc/150?img=23',
-            phone: '+91 9876543210',
-            email: 'aaravmehta12@gmail.com',
-          },
-        ],
-      },
-    ],
-  },
-];
+const dummyContacts = {
+  '1': [
+    {
+      id: 1,
+      gigTitle: '4 Video Editors for Shortfilm',
+      departments: [
+        {
+          id: 1,
+          name: 'Camera',
+          subTitle: '4 Camera Operator for Shortfilm',
+          contacts: [
+            {
+              id: 1,
+              role: 'Camera Operator',
+              company: 'Central Films',
+              name: 'Aarav Mehta',
+              avatar: 'https://i.pravatar.cc/150?img=20',
+              phone: '+91 9876543210',
+              email: 'aaravmehta12@gmail.com',
+            },
+            {
+              id: 2,
+              role: 'Camera Operator',
+              company: 'Central Films',
+              name: 'Aarav Mehta',
+              avatar: 'https://i.pravatar.cc/150?img=21',
+              phone: '+91 9876543210',
+              email: 'aaravmehta12@gmail.com',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  '2': [
+    {
+      id: 2,
+      gigTitle: '3 Lighting operator for Documentary',
+      departments: [
+        {
+          id: 2,
+          name: 'Lighting',
+          subTitle: '4 Lighting Operator for Shortfilm',
+          contacts: [
+            {
+              id: 3,
+              role: 'Lighting Operator',
+              company: 'Central Films',
+              name: 'Aarav Mehta',
+              avatar: 'https://i.pravatar.cc/150?img=22',
+              phone: '+91 9876543210',
+              email: 'aaravmehta12@gmail.com',
+            },
+            {
+              id: 4,
+              role: 'Lighting Operator',
+              company: 'Central Films',
+              name: 'Aarav Mehta',
+              avatar: 'https://i.pravatar.cc/150?img=23',
+              phone: '+91 9876543210',
+              email: 'aaravmehta12@gmail.com',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 
-export default function ContactListTab() {
+export default function ContactListTab({ selectedGig }) {
+  // Get contact list for selected gig
+  const contactData = dummyContacts[selectedGig] || dummyContacts['1'];
+
   return (
     <div className="space-y-6">
-      {dummyContacts.map((gig) => (
+      {contactData.map((gig) => (
         <div key={gig.id} className="space-y-4">
-          {/* Gig Header */}
-          <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-semibold text-black">
-              {gig.gigTitle}
-            </h2>
-            <p className="text-sm text-gray-600">{gig.dates}</p>
-          </div>
-
           {/* Departments */}
           <div className="space-y-6">
             {gig.departments.map((department) => (
