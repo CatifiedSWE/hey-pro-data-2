@@ -20,19 +20,28 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     try {
+      // Normalize email to lowercase
+      const normalizedEmail = email.toLowerCase().trim()
+
       // Request password reset - this will send OTP to email
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
 
       if (error) {
-        setError(error.message)
+        if (error.message.includes('rate limit')) {
+          setError('Too many requests. Please wait a moment before trying again.')
+        } else if (error.message.includes('not found')) {
+          setError('No account found with this email address.')
+        } else {
+          setError(error.message)
+        }
         setLoading(false)
         return
       }
 
       // Redirect to OTP page
-      router.push(`/auth/otp?email=${encodeURIComponent(email)}&type=reset`)
+      router.push(`/auth/otp?email=${encodeURIComponent(normalizedEmail)}&type=reset`)
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)

@@ -50,13 +50,27 @@ export default function LoginPage() {
     setError('')
 
     try {
+      // Normalize email to lowercase
+      const normalizedEmail = formData.email.toLowerCase().trim()
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: normalizedEmail,
         password: formData.password,
+        options: {
+          // Set session persistence based on "Keep me logged in" checkbox
+          persistSession: formData.keepLoggedIn
+        }
       })
 
       if (error) {
-        setError(error.message)
+        // Provide user-friendly error messages
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please verify your email before logging in. Check your inbox for the verification code.')
+        } else {
+          setError(error.message)
+        }
         setLoading(false)
         return
       }

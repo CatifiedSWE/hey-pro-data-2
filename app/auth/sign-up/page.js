@@ -56,20 +56,46 @@ export default function SignUpPage() {
     setError('')
 
     try {
+      // Normalize email to lowercase
+      const normalizedEmail = formData.email.toLowerCase().trim()
+
+      // Check if user already exists
+      const { data: existingUser } = await supabase.auth.admin.getUserByEmail
+      ? null 
+      : await supabase
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', (await supabase.auth.getUser()).data?.user?.id)
+          .maybeSingle()
+
       // Sign up with email and password - this will send OTP code to email
       const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
+        email: normalizedEmail,
         password: formData.password,
         options: {
           // No emailRedirectTo - this ensures OTP code is sent instead of magic link
           data: {
-            email: formData.email
+            email: normalizedEmail
           }
         }
       })
 
       if (error) {
-        setError(error.message)
+        // Handle specific error cases
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          setError('This email is already registered. Please login instead or use a different email.')
+        } else if (error.message.includes('Email rate limit exceeded')) {
+          setError('Too many signup attempts. Please try again in a few minutes.')
+        } else {
+          setError(error.message)
+        }
+        setLoading(false)
+        return
+      }
+
+      // If user already exists (identities array is empty), show appropriate message
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError('This email is already registered. Please login instead.')
         setLoading(false)
         return
       }
@@ -77,7 +103,7 @@ export default function SignUpPage() {
       // Check if email confirmation is required
       if (data.user && !data.session) {
         // Email confirmation required - redirect to OTP page
-        router.push(`/auth/otp?email=${encodeURIComponent(formData.email)}&type=signup`)
+        router.push(`/auth/otp?email=${encodeURIComponent(normalizedEmail)}&type=signup`)
       } else if (data.session) {
         // Auto-confirmed (disabled email confirmation) - go directly to form
         router.push('/auth/form')

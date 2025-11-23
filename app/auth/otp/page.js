@@ -14,6 +14,8 @@ export default function OTPPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)]
 
   useEffect(() => {
@@ -25,6 +27,16 @@ export default function OTPPage() {
       inputRefs[0].current.focus()
     }
   }, [email, router])
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   const handleChange = (index, value) => {
     // Only allow numbers
@@ -128,8 +140,14 @@ export default function OTPPage() {
   }
 
   const resendOTP = async () => {
+    // Check if cooldown is active
+    if (resendCooldown > 0) {
+      return
+    }
+
     setLoading(true)
     setError('')
+    setSuccessMessage('')
     setOtp(['', '', '', '', '', ''])
 
     try {
@@ -139,18 +157,38 @@ export default function OTPPage() {
           email
         })
         if (error) {
-          setError(error.message)
+          if (error.message.includes('rate limit')) {
+            setError('Too many requests. Please wait a moment before trying again.')
+            setResendCooldown(120) // 2 minutes cooldown for rate limit
+          } else {
+            setError(error.message)
+          }
         } else {
-          setError('OTP resent successfully!')
+          setSuccessMessage('OTP resent successfully! Please check your email.')
+          setResendCooldown(60) // 60 seconds cooldown
+          // Focus first input
+          if (inputRefs[0].current) {
+            inputRefs[0].current.focus()
+          }
         }
       } else if (type === 'reset') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth/reset-password`
         })
         if (error) {
-          setError(error.message)
+          if (error.message.includes('rate limit')) {
+            setError('Too many requests. Please wait a moment before trying again.')
+            setResendCooldown(120) // 2 minutes cooldown for rate limit
+          } else {
+            setError(error.message)
+          }
         } else {
-          setError('OTP resent successfully!')
+          setSuccessMessage('OTP resent successfully! Please check your email.')
+          setResendCooldown(60) // 60 seconds cooldown
+          // Focus first input
+          if (inputRefs[0].current) {
+            inputRefs[0].current.focus()
+          }
         }
       }
     } catch (err) {
@@ -192,8 +230,14 @@ export default function OTPPage() {
         </p>
 
         {error && (
-          <div className={`mb-4 p-3 ${error.includes('successfully') ? 'bg-green-50 border-green-200 text-green-600' : 'bg-red-50 border-red-200 text-red-600'} border rounded-lg text-sm`}>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+            {successMessage}
           </div>
         )}
 
@@ -243,13 +287,19 @@ export default function OTPPage() {
 
         {/* Resend OTP */}
         <div className="text-center mt-6">
-          <button
-            onClick={resendOTP}
-            disabled={loading}
-            className="text-[#FA6E80] hover:underline text-sm font-medium disabled:opacity-50"
-          >
-            Didn't receive the code? Resend
-          </button>
+          {resendCooldown > 0 ? (
+            <p className="text-gray-500 text-sm">
+              Resend OTP in <span className="font-semibold text-[#FA6E80]">{resendCooldown}s</span>
+            </p>
+          ) : (
+            <button
+              onClick={resendOTP}
+              disabled={loading}
+              className="text-[#FA6E80] hover:underline text-sm font-medium disabled:opacity-50 transition-all"
+            >
+              Didn't receive the code? Resend
+            </button>
+          )}
         </div>
       </div>
     </div>
