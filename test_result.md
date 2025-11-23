@@ -233,6 +233,30 @@ backend:
         agent: "main"
         comment: "Home page now properly checks authentication and redirects to login if user is not authenticated. Profile completion is also verified. Home page is only accessible to logged-in users with completed profiles."
 
+  - task: "PKCE OAuth Storage Fix"
+    implemented: true
+    working: "pending_test"
+    file: "/app/lib/supabase.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Fixed 'both auth code and code verifier should be non-empty' error. Modified AdaptiveStorage to always store PKCE-related keys in localStorage and check localStorage first in getItem. This ensures OAuth code verifier is accessible during callback flow. Removed explicit storageKey config to let Supabase use defaults with custom storage."
+
+  - task: "Auto-redirect Authenticated Users"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/page.js, /app/app/auth/login/page.js, /app/app/auth/sign-up/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Added session detection to root page, login page, and sign-up page. Authenticated users with active sessions are now automatically redirected to /home (if profile exists) or /auth/form (if profile incomplete). Prevents logged-in users from seeing auth pages unnecessarily."
+
 frontend:
   - task: "OTP Resend UI with Countdown Timer"
     implemented: true
@@ -270,3 +294,5 @@ agent_communication:
     message: "Implemented 'Keep me logged in' functionality and optimized loading experience: 1) Created adaptive storage system that uses localStorage when 'Keep me logged in' is checked, sessionStorage when unchecked. 2) Implemented one-time auth check per session to prevent multiple loading screens and flashing. 3) Session persists across browser tabs but expires when browser closes if 'Keep me logged in' is unchecked. 4) OAuth logins default to 'keep logged in' behavior."
   - agent: "main"
     message: "Fixed Google OAuth false error message issue. Problem: Profile check errors were bubbling up to outer catch block, causing error UI to display briefly even when authentication succeeded. Solution: Refactored callback page to use isolated checkProfileAndRedirect function that prevents profile errors from triggering error display. Added isRedirecting flag to ensure error UI never shows after redirect is initiated. Profile errors are now logged as non-blocking. Only genuine authentication failures (code exchange, session errors) show error messages to users."
+  - agent: "main"
+    message: "Fixed PKCE OAuth error and auto-redirect issues: 1) PKCE Error Fix - Modified AdaptiveStorage in supabase.js to always use localStorage for PKCE-related keys (code verifier). This ensures OAuth callback can access the code verifier. getItem now checks localStorage first, then sessionStorage. 2) Auto-redirect to Home - Added session checks to root page (/), login page, and sign-up page. Users with active sessions are now automatically redirected to /home (if profile exists) or /auth/form (if no profile). No more showing login/signup pages to already authenticated users."

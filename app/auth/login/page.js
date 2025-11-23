@@ -19,29 +19,38 @@ export default function LoginPage() {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        // Check if profile exists
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle()
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          // User is already logged in, redirect immediately
+          // Check if profile exists
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
 
-        if (profile) {
-          router.push('/home')
-        } else {
-          router.push('/auth/form')
+          // Mark auth as verified for this session
+          sessionStorage.setItem('heyprodata-auth-verified', 'true')
+
+          if (profile) {
+            router.replace('/home')
+          } else {
+            router.replace('/auth/form')
+          }
+          return
         }
+      } catch (error) {
+        console.error('Error checking session:', error)
+      }
+
+      // Check for error in URL (only if not already logged in)
+      const errorParam = searchParams.get('error')
+      if (errorParam === 'authentication_failed') {
+        setError('Authentication failed. Please try again.')
       }
     }
     checkUser()
-
-    // Check for error in URL
-    const errorParam = searchParams.get('error')
-    if (errorParam === 'authentication_failed') {
-      setError('Authentication failed. Please try again.')
-    }
   }, [router, searchParams])
 
   const handleSubmit = async (e) => {

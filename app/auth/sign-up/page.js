@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase, setStoragePreference } from '@/lib/supabase'
@@ -13,6 +13,35 @@ export default function SignUpPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          // User is already logged in, redirect immediately
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
+
+          // Mark auth as verified for this session
+          sessionStorage.setItem('heyprodata-auth-verified', 'true')
+
+          if (profile) {
+            router.replace('/home')
+          } else {
+            router.replace('/auth/form')
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error)
+      }
+    }
+    checkUser()
+  }, [router])
 
   const [passwordValidation, setPasswordValidation] = useState({
     minLength: false,
