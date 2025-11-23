@@ -415,3 +415,57 @@ For issues or questions, please open an issue in the repository.
 **Built with ❤️ for the creative community**
 
 🎬 HeyProData - Where Creative Professionals Connect
+
+API Endpoints
+/api/gigs
+  ├── POST /                          # Create new gig
+  ├── GET /                           # Get all gigs (paginated, filtered)
+  ├── GET /:id                        # Get single gig with details
+  ├── PATCH /:id                      # Update gig
+  └── DELETE /:id                     # Delete gig
+
+/api/gigs/:id/apply
+  └── POST /                          # Apply to a gig
+
+/api/gigs/:id/applications
+  ├── GET /                           # Get applications for a gig
+  └── PATCH /:applicationId/status    # Update application status
+
+/api/applications
+  ├── GET /my-applications            # Get user's applications
+  └── GET /:id                        # Get single application
+
+/api/availability
+  ├── POST /                          # Set availability
+  ├── GET /                           # Get user's availability
+  ├── GET /check                      # Check availability with conflicts
+  └── PATCH /:id                      # Update availability
+
+/api/contacts
+  ├── POST /                          # Add contact
+  ├── GET /gig/:gigId                 # Get contacts for a gig
+  └── DELETE /:id                     # Remove contact
+
+/api/referrals
+  ├── POST /                          # Create referral
+  └── GET /                           # Get user's referrals
+
+/api/skills
+  ├── POST /                          # Add skill
+  ├── GET /                           # Get user's skills
+  └── DELETE /:id                     # Remove skill
+
+/api/notifications
+  ├── GET /                           # Get user's notifications
+  ├── PATCH /:id/read                 # Mark as read
+  └── PATCH /mark-all-read            # Mark all as read
+
+/api/upload
+  ├── POST /resume                    # Upload resume
+  ├── POST /portfolio                 # Upload portfolio files
+  └── POST /profile-photo             # Upload profile photo
+
+/api/profile
+  ├── GET /                           # Get user profile
+  ├── PATCH /                         # Update profile
+  └── GET /check-complete             # Check if profile is complete
