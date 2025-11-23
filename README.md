@@ -6,6 +6,35 @@ A specialized professional networking and talent marketplace built for the film,
 
 **HeyProData** connects artists, filmmakers, producers, actors, crew members, and other production professionals so they can collaborate, hire, and get hired for creative projects.
 
+## 🔐 Authentication System
+
+HeyProData uses **Supabase Authentication** with the following features:
+
+### Authentication Methods
+- **Email/Password**: Traditional signup with OTP verification
+- **Google OAuth**: One-click Google sign-in with PKCE flow
+- **Session Management**: Adaptive storage (localStorage for "Keep me logged in", sessionStorage for temporary sessions)
+
+### User Flow
+1. **Sign Up/Login** → Email/password or Google OAuth
+2. **OTP Verification** → For email signups (5-digit code sent to email)
+3. **Profile Creation** → First-time users complete profile at `/auth/form`
+4. **Home Dashboard** → Access to full platform features
+
+### Database Tables
+- **`auth.users`** (Supabase managed): Stores authentication credentials and user accounts
+- **`user_profiles`**: Stores user profile information (legal name, alias, country, city, etc.)
+  - Links to `auth.users` via `user_id` foreign key
+  - Created after successful authentication when user completes profile form
+
+### Security Features
+- PKCE OAuth flow for secure Google authentication
+- Password requirements (8+ chars, uppercase, number, special character)
+- OTP rate limiting (60-second cooldown)
+- Duplicate email prevention
+- Auto-redirect for authenticated users
+- Session persistence with "Keep me logged in" option
+
 ## ✨ Features
 
 - **Authentication Pages**
