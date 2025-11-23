@@ -1,59 +1,119 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the session from the URL hash
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Get the authorization code from the URL
+        const code = searchParams.get('code')
         
-        if (error) {
-          console.error('Error getting session:', error)
-          router.push('/auth/login?error=authentication_failed')
-          return
-        }
-
-        if (session) {
-          // Check if user has completed their profile
-          const { data: profile, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single()
-
-          if (profileError && profileError.code !== 'PGRST116') {
-            console.error('Error checking profile:', profileError)
+        if (code) {
+          // Exchange the code for a session (PKCE flow)
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (exchangeError) {
+            console.error('Error exchanging code for session:', exchangeError)
+            setError(exchangeError.message)
+            setTimeout(() => {
+              router.push('/auth/login?error=authentication_failed')
+            }, 2000)
+            return
           }
 
-          // If no profile exists, redirect to form page
-          if (!profile) {
-            router.push('/auth/form')
+          if (data.session) {
+            // Check if user has completed their profile
+            const { data: profile, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('user_id', data.session.user.id)
+              .single()
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('Error checking profile:', profileError)
+            }
+
+            // If no profile exists, redirect to form page
+            if (!profile) {
+              router.push('/auth/form')
+            } else {
+              router.push('/home')
+            }
           } else {
-            router.push('/home')
+            router.push('/auth/login')
           }
         } else {
-          router.push('/auth/login')
+          // No code in URL, check if there's an existing session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+          
+          if (sessionError) {
+            console.error('Error getting session:', sessionError)
+            router.push('/auth/login?error=authentication_failed')
+            return
+          }
+
+          if (session) {
+            // Check if user has completed their profile
+            const { data: profile, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .single()
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('Error checking profile:', profileError)
+            }
+
+            // If no profile exists, redirect to form page
+            if (!profile) {
+              router.push('/auth/form')
+            } else {
+              router.push('/home')
+            }
+          } else {
+            router.push('/auth/login')
+          }
         }
       } catch (error) {
         console.error('Callback error:', error)
-        router.push('/auth/login?error=authentication_failed')
+        setError(error.message || 'Authentication failed')
+        setTimeout(() => {
+          router.push('/auth/login?error=authentication_failed')
+        }, 2000)
       }
     }
 
     handleCallback()
-  }, [router])
+  }, [router, searchParams])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FA6E80] mx-auto mb-4"></div>
-        <p className="text-gray-600">Authenticating...</p>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center max-w-md px-4">
+        {error ? (
+          <>
+            <div className="mb-6">
+              <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-red-600 font-medium mb-2">Authentication Error</p>
+              <p className="text-gray-600 text-sm">{error}</p>
+              <p className="text-gray-500 text-xs mt-4">Redirecting to login page...</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FA6E80] mx-auto mb-4"></div>
+            <p className="text-gray-600">Authenticating...</p>
+            <p className="text-gray-500 text-sm mt-2">Please wait while we complete your sign in</p>
+          </>
+        )}
       </div>
     </div>
   )
