@@ -5,13 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import NotificationModal from '@/components/modals/NotificationModal';
-import ChatModal from '@/components/modals/ChatModal';
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [showExploreMenu, setShowExploreMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -82,14 +80,14 @@ export default function Navbar() {
               </button>
 
               {/* Chat Icon */}
-              <button 
-                onClick={() => setShowChat(true)}
+              <Link 
+                href="/chat"
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
               >
                 <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-              </button>
+              </Link>
 
               {/* Notification Icon */}
               <button 
@@ -139,7 +137,6 @@ export default function Navbar() {
 
       {/* Modals */}
       <NotificationModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
-      <ChatModal isOpen={showChat} onClose={() => setShowChat(false)} />
     </>
   );
 }
