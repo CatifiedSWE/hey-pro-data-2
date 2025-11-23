@@ -34,10 +34,12 @@ export default function AuthCallbackPage() {
               .from('user_profiles')
               .select('*')
               .eq('user_id', data.session.user.id)
-              .single()
+              .maybeSingle()
 
-            if (profileError && profileError.code !== 'PGRST116') {
+            // Only log error if it's a real database error (not "no rows found")
+            if (profileError) {
               console.error('Error checking profile:', profileError)
+              // Continue anyway - we'll treat it as no profile
             }
 
             // If no profile exists, redirect to form page
@@ -65,10 +67,12 @@ export default function AuthCallbackPage() {
               .from('user_profiles')
               .select('*')
               .eq('user_id', session.user.id)
-              .single()
+              .maybeSingle()
 
-            if (profileError && profileError.code !== 'PGRST116') {
+            // Only log error if it's a real database error (not "no rows found")
+            if (profileError) {
               console.error('Error checking profile:', profileError)
+              // Continue anyway - we'll treat it as no profile
             }
 
             // If no profile exists, redirect to form page

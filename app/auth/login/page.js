@@ -26,7 +26,7 @@ export default function LoginPage() {
           .from('user_profiles')
           .select('*')
           .eq('user_id', session.user.id)
-          .single()
+          .maybeSingle()
 
         if (profile) {
           router.push('/home')
@@ -67,7 +67,7 @@ export default function LoginPage() {
           .from('user_profiles')
           .select('*')
           .eq('user_id', data.user.id)
-          .single()
+          .maybeSingle()
 
         if (profile) {
           router.push('/home')

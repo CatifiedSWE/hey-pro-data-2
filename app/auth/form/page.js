@@ -36,7 +36,7 @@ export default function FormPage() {
         .from('user_profiles')
         .select('*')
         .eq('user_id', session.user.id)
-        .single()
+        .maybeSingle()
 
       // If profile exists, redirect to home
       if (profile) {
