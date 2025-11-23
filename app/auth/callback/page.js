@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, setStoragePreference } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -29,24 +29,36 @@ export default function AuthCallbackPage() {
           }
 
           if (data.session) {
+            // OAuth logins default to "keep me logged in"
+            setStoragePreference(true)
+            
+            // Mark auth as verified for this session
+            sessionStorage.setItem('heyprodata-auth-verified', 'true')
+            
             // Check if user has completed their profile
-            const { data: profile, error: profileError } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('user_id', data.session.user.id)
-              .maybeSingle()
+            try {
+              const { data: profile, error: profileError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', data.session.user.id)
+                .maybeSingle()
 
-            // Only log error if it's a real database error (not "no rows found")
-            if (profileError) {
-              console.error('Error checking profile:', profileError)
-              // Continue anyway - we'll treat it as no profile
-            }
+              // Only log actual database errors, not "no rows" cases
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('Error checking profile:', profileError)
+              }
 
-            // If no profile exists, redirect to form page
-            if (!profile) {
+              // If no profile exists, redirect to form page
+              // Treat any error as "no profile" to avoid blocking user flow
+              if (!profile || profileError) {
+                router.push('/auth/form')
+              } else {
+                router.push('/home')
+              }
+            } catch (profileCheckError) {
+              // If profile check fails entirely, assume no profile and continue
+              console.error('Profile check exception:', profileCheckError)
               router.push('/auth/form')
-            } else {
-              router.push('/home')
             }
           } else {
             router.push('/auth/login')
@@ -62,24 +74,36 @@ export default function AuthCallbackPage() {
           }
 
           if (session) {
+            // OAuth logins default to "keep me logged in"
+            setStoragePreference(true)
+            
+            // Mark auth as verified for this session
+            sessionStorage.setItem('heyprodata-auth-verified', 'true')
+            
             // Check if user has completed their profile
-            const { data: profile, error: profileError } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .maybeSingle()
+            try {
+              const { data: profile, error: profileError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .maybeSingle()
 
-            // Only log error if it's a real database error (not "no rows found")
-            if (profileError) {
-              console.error('Error checking profile:', profileError)
-              // Continue anyway - we'll treat it as no profile
-            }
+              // Only log actual database errors, not "no rows" cases
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('Error checking profile:', profileError)
+              }
 
-            // If no profile exists, redirect to form page
-            if (!profile) {
+              // If no profile exists, redirect to form page
+              // Treat any error as "no profile" to avoid blocking user flow
+              if (!profile || profileError) {
+                router.push('/auth/form')
+              } else {
+                router.push('/home')
+              }
+            } catch (profileCheckError) {
+              // If profile check fails entirely, assume no profile and continue
+              console.error('Profile check exception:', profileCheckError)
               router.push('/auth/form')
-            } else {
-              router.push('/home')
             }
           } else {
             router.push('/auth/login')

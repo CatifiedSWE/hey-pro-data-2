@@ -46,10 +46,23 @@ const dummyPosts = [
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     const checkAuthAndProfile = async () => {
       try {
+        // Check if we've already verified auth in this session (one-time check)
+        const authVerified = sessionStorage.getItem('heyprodata-auth-verified');
+        
+        if (authVerified === 'true') {
+          // Already verified in this session, skip loading screen
+          setLoading(false);
+          return;
+        }
+
+        // First-time check in this session
+        setIsVerifying(true);
+        
         // Check if user is authenticated
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -64,7 +77,7 @@ export default function HomePage() {
           .from('user_profiles')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking profile:', error);
@@ -76,6 +89,8 @@ export default function HomePage() {
           return;
         }
 
+        // Mark auth as verified for this session
+        sessionStorage.setItem('heyprodata-auth-verified', 'true');
         setLoading(false);
       } catch (error) {
         console.error('Auth check error:', error);

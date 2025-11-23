@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, setStoragePreference } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -50,16 +50,15 @@ export default function LoginPage() {
     setError('')
 
     try {
+      // Set storage preference BEFORE login
+      setStoragePreference(formData.keepLoggedIn)
+
       // Normalize email to lowercase
       const normalizedEmail = formData.email.toLowerCase().trim()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
-        password: formData.password,
-        options: {
-          // Set session persistence based on "Keep me logged in" checkbox
-          persistSession: formData.keepLoggedIn
-        }
+        password: formData.password
       })
 
       if (error) {
@@ -76,6 +75,9 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        // Mark that auth has been verified in this session
+        sessionStorage.setItem('heyprodata-auth-verified', 'true')
+        
         // Check if user has completed their profile
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -100,6 +102,9 @@ export default function LoginPage() {
     setError('')
 
     try {
+      // Google OAuth defaults to "keep me logged in"
+      setStoragePreference(true)
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

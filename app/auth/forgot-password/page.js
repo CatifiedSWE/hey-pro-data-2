@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
       // Normalize email to lowercase
       const normalizedEmail = email.toLowerCase().trim()
 
-      // Request password reset - this will send OTP to email
+      // Request password reset - this will send reset link to email
       const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
@@ -40,8 +40,9 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      // Redirect to OTP page
-      router.push(`/auth/otp?email=${encodeURIComponent(normalizedEmail)}&type=reset`)
+      // Show success message - don't redirect
+      setSuccess(true)
+      setLoading(false)
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
@@ -75,7 +76,7 @@ export default function ForgotPasswordPage() {
           Forgot Password?
         </h2>
         <p className="text-gray-600 text-center mb-8">
-          Enter your email address and we'll send you a verification code to reset your password.
+          Enter your email address and we'll send you a link to reset your password.
         </p>
 
         {error && (
@@ -85,8 +86,9 @@ export default function ForgotPasswordPage() {
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
-            Verification code sent! Check your email.
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            <p className="font-semibold mb-1">Reset link sent!</p>
+            <p>A password reset link has been sent to <span className="font-medium">{email}</span>. Please check your email and click the link to reset your password.</p>
           </div>
         )}
 
@@ -105,10 +107,10 @@ export default function ForgotPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || success}
             className="w-full py-4 rounded-xl font-semibold text-white text-lg transition-all transform hover:scale-[1.02] bg-[#FA6E80] hover:bg-[#ff5a75] cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending...' : 'Send Verification Code'}
+            {loading ? 'Sending...' : success ? 'Link Sent' : 'Send Reset Link'}
           </button>
         </form>
 

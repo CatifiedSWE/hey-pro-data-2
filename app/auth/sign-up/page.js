@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, setStoragePreference } from '@/lib/supabase'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -119,6 +119,9 @@ export default function SignUpPage() {
     setError('')
 
     try {
+      // Google OAuth defaults to "keep me logged in"
+      setStoragePreference(true)
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

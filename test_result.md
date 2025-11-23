@@ -170,6 +170,66 @@ backend:
         agent: "main"
         comment: "Added user-friendly error messages for common scenarios: duplicate email, invalid credentials, rate limiting, account not found. Improved UX with clear feedback."
 
+  - task: "Google OAuth Callback Error Handling Fix"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/auth/callback/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Fixed false error showing during Google OAuth login/signup. Added try-catch wrapper around profile checks. Now treats profile check errors as 'no profile' instead of authentication failure. This prevents blocking user flow when profile table has issues."
+
+  - task: "Password Reset Flow - No Redirect"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/auth/forgot-password/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Changed password reset flow to show success message on same page instead of redirecting to OTP page. Message displays 'A password reset link has been sent to [email]'. Users receive reset link via email and can click it to go directly to reset-password page."
+
+  - task: "Keep Me Logged In Functionality"
+    implemented: true
+    working: "pending_test"
+    file: "/app/lib/supabase.js, /app/app/auth/login/page.js, /app/app/auth/sign-up/page.js, /app/app/auth/callback/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Implemented adaptive storage system. When 'Keep me logged in' is checked, uses localStorage (persists after browser close). When unchecked, uses sessionStorage (expires when browser closes). OAuth logins default to 'keep logged in'."
+
+  - task: "One-Time Session Auth Check"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/home/page.js, /app/app/auth/login/page.js, /app/app/auth/callback/page.js, /app/app/auth/form/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Implemented one-time auth verification per browser session using sessionStorage flag. After first successful auth check, subsequent page navigations skip the loading screen to prevent flashing and improve UX. Auth is only fully checked once per session."
+
+  - task: "Home Page Access Control"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/home/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Home page now properly checks authentication and redirects to login if user is not authenticated. Profile completion is also verified. Home page is only accessible to logged-in users with completed profiles."
+
 frontend:
   - task: "OTP Resend UI with Countdown Timer"
     implemented: true
@@ -201,3 +261,7 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Fixed all reported authentication issues. Ready for testing. Key fixes: 1) Duplicate email prevention with clear error messages, 2) 60-second OTP cooldown with visual timer, 3) Proper session persistence, 4) Email normalization, 5) Better error handling throughout."
+  - agent: "main"
+    message: "Fixed two new authentication issues: 1) Google OAuth callback now has robust error handling to prevent false errors when checking user profiles - wraps profile check in try-catch and treats errors as 'no profile' instead of blocking flow. 2) Password reset now shows success message on same page without redirecting to OTP page - displays 'A password reset link has been sent to [email]' message."
+  - agent: "main"
+    message: "Implemented 'Keep me logged in' functionality and optimized loading experience: 1) Created adaptive storage system that uses localStorage when 'Keep me logged in' is checked, sessionStorage when unchecked. 2) Implemented one-time auth check per session to prevent multiple loading screens and flashing. 3) Session persists across browser tabs but expires when browser closes if 'Keep me logged in' is unchecked. 4) OAuth logins default to 'keep logged in' behavior."

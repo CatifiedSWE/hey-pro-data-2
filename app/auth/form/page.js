@@ -111,6 +111,9 @@ export default function FormPage() {
         return
       }
 
+      // Mark auth as verified for this session
+      sessionStorage.setItem('heyprodata-auth-verified', 'true')
+      
       // Profile created successfully, redirect to home
       router.push('/home')
     } catch (err) {
