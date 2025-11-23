@@ -56,12 +56,15 @@ export default function SignUpPage() {
     setError('')
 
     try {
-      // Sign up with email and password - this will send OTP to email
+      // Sign up with email and password - this will send OTP code to email
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          // No emailRedirectTo - this ensures OTP code is sent instead of magic link
+          data: {
+            email: formData.email
+          }
         }
       })
 
@@ -71,8 +74,14 @@ export default function SignUpPage() {
         return
       }
 
-      // Redirect to OTP page with email
-      router.push(`/auth/otp?email=${encodeURIComponent(formData.email)}&type=signup`)
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        // Email confirmation required - redirect to OTP page
+        router.push(`/auth/otp?email=${encodeURIComponent(formData.email)}&type=signup`)
+      } else if (data.session) {
+        // Auto-confirmed (disabled email confirmation) - go directly to form
+        router.push('/auth/form')
+      }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
