@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
 
 // GET /api/skills - Get user's skills
 export async function GET(request) {
   try {
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -34,7 +34,7 @@ export async function GET(request) {
 // POST /api/skills - Add skill
 export async function POST(request) {
   try {
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

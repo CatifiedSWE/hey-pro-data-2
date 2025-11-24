@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
 
 // PATCH /api/availability/[id] - Update availability
 export async function PATCH(request, { params }) {
   try {
     const { id: availabilityId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

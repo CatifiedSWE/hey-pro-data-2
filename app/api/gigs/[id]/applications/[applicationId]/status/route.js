@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, createNotification } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, createNotification } from '@/lib/supabaseServer'
 
 // PATCH /api/gigs/[id]/applications/[applicationId]/status - Update application status
 export async function PATCH(request, { params }) {
   try {
     const { id: gigId, applicationId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

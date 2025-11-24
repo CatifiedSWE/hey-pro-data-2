@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from '@/lib/supabaseServer'
 
 // GET /api/contacts/gig/[gigId] - Get contacts for a gig
 export async function GET(request, { params }) {
   try {
     const { gigId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

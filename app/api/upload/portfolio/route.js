@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, uploadFile, validateFile, FILE_SIZE_LIMITS, ALLOWED_MIME_TYPES } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, uploadFile, validateFile, FILE_SIZE_LIMITS, ALLOWED_MIME_TYPES } from '@/lib/supabaseServer'
 
 // POST /api/upload/portfolio - Upload portfolio file
 export async function POST(request) {
   try {
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

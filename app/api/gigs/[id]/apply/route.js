@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, notFoundResponse, createNotification } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, notFoundResponse, createNotification } from '@/lib/supabaseServer'
 
 // POST /api/gigs/[id]/apply - Apply to a gig
 export async function POST(request, { params }) {
   try {
     const { id: gigId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, notFoundResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, notFoundResponse } from '@/lib/supabaseServer'
 
 // GET /api/gigs/[id] - Get single gig with details
 export async function GET(request, { params }) {
@@ -44,7 +44,7 @@ export async function PATCH(request, { params }) {
   try {
     const { id: gigId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -136,7 +136,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id: gigId } = await Promise.resolve(params)
     
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

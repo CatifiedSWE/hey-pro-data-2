@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, supabaseServer, successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from '@/lib/supabaseServer'
 
 // GET /api/gigs - Get all gigs (paginated, filtered)
 export async function GET(request) {
@@ -56,7 +56,7 @@ export async function GET(request) {
 // POST /api/gigs - Create new gig
 export async function POST(request) {
   try {
-    const supabase = supabaseServer
+    const supabase = createAuthenticatedClient(request) || supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
