@@ -42,8 +42,11 @@ export default function ProfilePage() {
       setError(null);
       
       // Get auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError);
+        setLoading(false);
         router.push('/auth/login');
         return;
       }
@@ -57,37 +60,65 @@ export default function ProfilePage() {
         }
       });
       
-      const profileData = await profileRes.json();
+      if (!profileRes.ok) {
+        console.error('Profile fetch failed with status:', profileRes.status);
+        setError(`Failed to load profile (Status: ${profileRes.status})`);
+        setLoading(false);
+        return;
+      }
 
-      if (profileData.success) {
-        setProfile(profileData.data);
+      const profileData = await profileRes.json();
+      console.log('Profile data received:', profileData);
+
+      if (profileData.success && profileData.data) {
+        // Handle both old field names (first_name, surname) and new field names (legal_first_name, legal_surname)
+        const profile = profileData.data;
+        const legalFirstName = profile.legal_first_name || profile.first_name || '';
+        const legalSurname = profile.legal_surname || profile.surname || '';
+        
+        setProfile({
+          ...profile,
+          legal_first_name: legalFirstName,
+          legal_surname: legalSurname
+        });
+        
         setEditedData({
-          bio: profileData.data.bio || '',
-          legal_first_name: profileData.data.legal_first_name || '',
-          legal_surname: profileData.data.legal_surname || '',
-          alias_first_name: profileData.data.alias_first_name || '',
-          alias_surname: profileData.data.alias_surname || ''
+          bio: profile.bio || '',
+          legal_first_name: legalFirstName,
+          legal_surname: legalSurname,
+          alias_first_name: profile.alias_first_name || '',
+          alias_surname: profile.alias_surname || ''
         });
       } else {
-        setError('Failed to load profile');
+        console.error('Profile data not successful:', profileData);
+        setError(profileData.error || 'Failed to load profile');
+        setLoading(false);
+        return;
       }
 
       // Fetch skills
-      const skillsRes = await fetch('/api/skills', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      try {
+        const skillsRes = await fetch('/api/skills', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (skillsRes.ok) {
+          const skillsData = await skillsRes.json();
+          if (skillsData.success) {
+            setSkills(skillsData.data || []);
+          }
         }
-      });
-      const skillsData = await skillsRes.json();
-
-      if (skillsData.success) {
-        setSkills(skillsData.data || []);
+      } catch (skillsError) {
+        // Skills fetch is non-critical, just log error
+        console.error('Error fetching skills:', skillsError);
       }
 
       setLoading(false);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setError('Error loading profile. Please try again.');
+      setError(`Error loading profile: ${error.message}`);
       setLoading(false);
     }
   };
@@ -292,7 +323,7 @@ export default function ProfilePage() {
 
   const displayName = profile.alias_first_name 
     ? `${profile.alias_first_name} ${profile.alias_surname || ''}`.trim()
-    : `${profile.legal_first_name || ''} ${profile.legal_surname || ''}`.trim();
+    : `${profile.legal_first_name || ''} ${profile.legal_surname || ''}`.trim() || 'User';
 
   return (
     <div className="min-h-screen bg-gray-50">

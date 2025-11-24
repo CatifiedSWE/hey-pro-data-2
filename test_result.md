@@ -309,6 +309,18 @@ frontend:
         agent: "main"
         comment: "Added visual countdown timer showing remaining seconds before OTP can be resent. Success messages now show in green, error messages in red. Better visual feedback for users."
 
+  - task: "Profile Page Field Name Mismatch Fix"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/profile/page.js, /app/app/auth/form/page.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "CRITICAL FIX: Fixed profile page error where users couldn't access their profile after signup. Root cause was field name mismatch - form page was saving profiles with 'first_name' and 'surname' fields, but profile page was trying to read 'legal_first_name' and 'legal_surname' fields. Fixed by: 1) Updated form page to save with correct field names (legal_first_name, legal_surname) matching API schema, 2) Added backward compatibility in profile page to handle both old and new field names, 3) Enhanced error handling with better session validation and HTTP response checking, 4) Added comprehensive console logging for debugging, 5) Made displayName computation safer with fallback to 'User' if no name available, 6) Skills fetch errors are now non-critical and won't break the page."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -341,3 +353,5 @@ agent_communication:
     message: "✅ PROFILE PAGE IMPLEMENTATION COMPLETE - Created comprehensive profile page at /app/app/profile/page.js with the following features: 1) Profile banner and photo with edit-on-hover functionality, 2) Real-time data fetching from user_profiles and applicant_skills tables, 3) Editable bio and name fields with save/cancel buttons, 4) Skills section displaying user skills from database, 5) Hard-coded Credits section (ready for future database integration), 6) Hard-coded sidebar highlight cards showing cinematography work, 7) Image upload functionality for both banner and profile photo, 8) New backend endpoint POST /api/upload/profile-banner for banner uploads, 9) Updated uploadFile helper to support profile-banner bucket, 10) Responsive design following the provided mockup. All edit functionality works on hover, and uploads are handled securely through Supabase storage with proper RLS policies."
   - agent: "main"
     message: "✅ PROFILE PAGE BUG FIXES - Fixed multiple issues in profile page: 1) Loading state management - Added setLoading(false) before router.push() to prevent page staying in loading state during redirect, 2) Better error handling - Added alerts and console logging for API failures to help with debugging, 3) Null safety - Added null checks and .trim() for displayName computation to handle missing name fields, 4) Enhanced logging - Added comprehensive console.log statements throughout fetchProfileData() to track data flow and help debug issues, 5) Skills array safety - Ensured skills state defaults to empty array if API returns no data. Profile page now properly handles all edge cases including no session, missing profile data, and API failures."
+  - agent: "main"
+    message: "🔧 CRITICAL PROFILE PAGE FIX - Fixed the error preventing users from accessing profile page after signup. Problem: Database field name mismatch between form and profile pages. Form page was saving 'first_name'/'surname' but profile page was reading 'legal_first_name'/'legal_surname', causing undefined values and page crashes. Solution: 1) Updated form page (/app/app/auth/form/page.js) to use correct field names matching API schema (legal_first_name, legal_surname), 2) Added backward compatibility in profile page to handle both old and new field names for existing users, 3) Enhanced error handling with proper session validation and HTTP status checks, 4) Added comprehensive console logging for easier debugging, 5) Made displayName computation safer with fallback, 6) Made skills fetch non-critical so errors won't break page. Profile page should now work for all users including newly signed up ones."

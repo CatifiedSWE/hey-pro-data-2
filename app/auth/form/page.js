@@ -95,8 +95,8 @@ export default function FormPage() {
         .insert([
           {
             user_id: currentUser.id,
-            first_name: formData.firstName.trim(),
-            surname: formData.surname.trim(),
+            legal_first_name: formData.firstName.trim(),
+            legal_surname: formData.surname.trim(),
             alias_first_name: formData.aliasFirstName.trim() || null,
             alias_surname: formData.aliasSurname.trim() || null,
             country: formData.country,
