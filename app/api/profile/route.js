@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
+import { createAuthenticatedClient, successResponse, errorResponse, unauthorizedResponse } from '@/lib/supabaseServer'
 
 // GET /api/profile - Get user profile
 export async function GET(request) {
   try {
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      console.error('[GET /api/profile] No auth token provided')
+      return unauthorizedResponse('Authentication required')
+    }
+
     // Get authenticated user
-    const supabase = supabaseServer
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
