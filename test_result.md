@@ -313,7 +313,7 @@ frontend:
     implemented: true
     working: "pending_test"
     file: "/app/app/profile/page.js, /app/app/auth/form/page.js, /app/app/api/[[...path]]/route.js, /app/lib/supabaseServer.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: true
     status_history:
@@ -323,6 +323,9 @@ frontend:
       - working: "pending_test"
         agent: "main"
         comment: "🔧 ROOT CAUSE FIX: User reported that Supabase database has 'first_name' and 'surname' columns (NOT 'legal_first_name' and 'legal_surname'). This was causing API 404 errors. FIXED: 1) Updated /app/app/auth/form/page.js to insert using correct DB field names (first_name, surname), 2) Updated /app/app/api/[[...path]]/route.js GET /api/profile to map DB fields to API fields for backward compatibility, 3) Updated PATCH /api/profile to accept both API field names and DB field names with proper mapping, 4) Updated /app/lib/supabaseServer.js checkProfileComplete() to support both field name formats. Now the system uses the actual database schema (first_name, surname) internally while maintaining API compatibility with legal_first_name/legal_surname for existing code. Profile page should now work correctly with proper data fetching."
+      - working: "pending_test"
+        agent: "main"
+        comment: "🔧 PROFILE PAGE 404 FIX: User reported two issues: 1) Profile page unnecessarily redirects to form page when 404, but users with basic profile (firstName, surname from form) should be able to access profile page to add bio/banner/photo. 2) Users WITH profiles are getting 404 errors. FIXES APPLIED: 1) Removed redirect from profile page to form page on 404 - now shows empty profile fields that users can fill in (bio, banner, photo). 2) Enhanced logging in both profile page (frontend) and API route (backend) to help debug 404 errors for users who DO have profiles. Added detailed console logs showing: request URL, user ID, auth token, database error codes, profile fields returned. 3) Changed 404 handling to initialize empty profile state instead of redirecting, allowing users to complete their profile details. Profile page now accessible to all authenticated users regardless of profile completion status."
 
 metadata:
   created_by: "main_agent"

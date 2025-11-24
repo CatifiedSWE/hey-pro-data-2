@@ -1253,8 +1253,11 @@ async function handleGetProfile(request) {
   try {
     const { user, error: authError } = await getAuthUser(request)
     if (authError || !user) {
+      console.error('[GET /api/profile] Auth error:', authError)
       return unauthorizedResponse('Authentication required')
     }
+
+    console.log('[GET /api/profile] Fetching profile for user_id:', user.id)
 
     const { data, error } = await supabaseServer
       .from('user_profiles')
@@ -1262,9 +1265,20 @@ async function handleGetProfile(request) {
       .eq('user_id', user.id)
       .single()
 
-    if (error || !data) {
-      return notFoundResponse('Profile not found')
+    if (error) {
+      console.error('[GET /api/profile] Database error:', error)
+      console.error('[GET /api/profile] Error code:', error.code)
+      console.error('[GET /api/profile] Error message:', error.message)
+      return notFoundResponse(`Profile not found: ${error.message}`)
     }
+
+    if (!data) {
+      console.log('[GET /api/profile] No profile data found for user_id:', user.id)
+      return notFoundResponse('Profile not found - no data returned')
+    }
+
+    console.log('[GET /api/profile] Profile found successfully for user_id:', user.id)
+    console.log('[GET /api/profile] Profile fields:', Object.keys(data))
 
     // Map database fields to API fields for consistency
     // Database has: first_name, surname
@@ -1280,7 +1294,7 @@ async function handleGetProfile(request) {
 
     return successResponse(profileData)
   } catch (error) {
-    console.error('Error fetching profile:', error)
+    console.error('[GET /api/profile] Unexpected error:', error)
     return errorResponse('Failed to fetch profile', 500)
   }
 }

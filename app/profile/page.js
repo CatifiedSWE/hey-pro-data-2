@@ -64,20 +64,52 @@ export default function ProfilePage() {
       
       console.log('Profile response status:', profileRes.status);
       console.log('Profile response headers:', Object.fromEntries(profileRes.headers.entries()));
+      console.log('Request URL:', profileRes.url);
       
       if (!profileRes.ok) {
         const errorText = await profileRes.text();
         console.error('Profile fetch failed with status:', profileRes.status);
         console.error('Error response:', errorText);
+        console.error('User ID:', session.user.id);
+        console.error('Auth token (first 50 chars):', token?.substring(0, 50) + '...');
         
-        // If profile not found (404), redirect to profile form to create one
+        // If profile not found (404), it means user has basic profile info but hasn't filled additional details
+        // Don't redirect - instead initialize empty profile so they can add bio, banner, photo
         if (profileRes.status === 404) {
-          console.log('Profile not found, redirecting to profile form...');
-          router.push('/auth/form');
+          console.log('Profile not found (404), initializing empty profile for user to complete...');
+          
+          // Initialize with empty profile - user can fill in bio, banner, photo
+          setProfile({
+            user_id: session.user.id,
+            first_name: '',
+            surname: '',
+            legal_first_name: '',
+            legal_surname: '',
+            alias_first_name: '',
+            alias_surname: '',
+            bio: '',
+            profile_photo_url: '',
+            banner_url: '',
+            country: '',
+            city: ''
+          });
+          
+          setEditedData({
+            bio: '',
+            legal_first_name: '',
+            legal_surname: '',
+            alias_first_name: '',
+            alias_surname: ''
+          });
+          
+          // Set a friendly message instead of error
+          setError('Complete your profile by adding your bio, profile photo, and banner image below.');
+          setLoading(false);
           return;
         }
         
-        setError(`Failed to load profile (Status: ${profileRes.status})`);
+        // For other errors (401, 500, etc), show error
+        setError(`Failed to load profile (Status: ${profileRes.status}). Error: ${errorText}`);
         setLoading(false);
         return;
       }
@@ -90,6 +122,9 @@ export default function ProfilePage() {
         const profile = profileData.data;
         const legalFirstName = profile.legal_first_name || profile.first_name || '';
         const legalSurname = profile.legal_surname || profile.surname || '';
+        
+        console.log('Profile loaded successfully for user:', session.user.id);
+        console.log('Profile fields - first_name:', profile.first_name, 'surname:', profile.surname);
         
         setProfile({
           ...profile,
