@@ -198,7 +198,7 @@ All authentication pages maintain the existing beautiful UI:
 ### **Google OAuth Configuration:**
 - Make sure your Google OAuth redirect URL in Google Console includes:
   - `http://localhost:3000/auth/callback` (for local development)
-  - `https://api-modular-4.preview.emergentagent.com/auth/callback` (for production)
+  - `https://endpoint-tests.preview.emergentagent.com/auth/callback` (for production)
 
 ### **Apple OAuth:**
 - Apple button is currently disabled (as requested)
