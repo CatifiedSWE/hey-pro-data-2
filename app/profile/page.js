@@ -36,24 +36,34 @@ export default function ProfilePage() {
 
   const fetchProfileData = async () => {
     try {
+      console.log('Fetching profile data...');
+      
       // Get auth token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.log('No session found, redirecting to login');
+        setLoading(false);
         router.push('/auth/login');
         return;
       }
 
+      console.log('Session found, user ID:', session.user?.id);
       const token = session.access_token;
 
       // Fetch profile
+      console.log('Fetching profile from API...');
       const profileRes = await fetch('/api/profile', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('Profile response status:', profileRes.status);
       const profileData = await profileRes.json();
+      console.log('Profile data:', profileData);
 
       if (profileData.success) {
+        console.log('Profile loaded successfully');
         setProfile(profileData.data);
         setEditedData({
           bio: profileData.data.bio || '',
@@ -62,23 +72,33 @@ export default function ProfilePage() {
           alias_first_name: profileData.data.alias_first_name || '',
           alias_surname: profileData.data.alias_surname || ''
         });
+      } else {
+        console.error('Failed to fetch profile:', profileData.error);
+        alert('Failed to load profile: ' + (profileData.error || 'Unknown error'));
       }
 
       // Fetch skills
+      console.log('Fetching skills from API...');
       const skillsRes = await fetch('/api/skills', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       const skillsData = await skillsRes.json();
+      console.log('Skills data:', skillsData);
 
       if (skillsData.success) {
-        setSkills(skillsData.data);
+        console.log('Skills loaded successfully, count:', skillsData.data?.length || 0);
+        setSkills(skillsData.data || []);
+      } else {
+        console.error('Failed to fetch skills:', skillsData.error);
       }
 
       setLoading(false);
+      console.log('Profile page loaded successfully');
     } catch (error) {
       console.error('Error fetching profile:', error);
+      alert('Error loading profile. Please try again.');
       setLoading(false);
     }
   };
@@ -239,8 +259,8 @@ export default function ProfilePage() {
   }
 
   const displayName = profile.alias_first_name 
-    ? `${profile.alias_first_name} ${profile.alias_surname || ''}`
-    : `${profile.legal_first_name} ${profile.legal_surname}`;
+    ? `${profile.alias_first_name} ${profile.alias_surname || ''}`.trim()
+    : `${profile.legal_first_name || ''} ${profile.legal_surname || ''}`.trim();
 
   return (
     <div className="min-h-screen bg-gray-50">
