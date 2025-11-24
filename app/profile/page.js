@@ -207,16 +207,24 @@ export default function ProfilePage() {
         body: formData
       });
 
+      // Check if response is ok before parsing JSON
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Banner upload failed:', res.status, errorText);
+        throw new Error(`Upload failed (${res.status}): ${errorText}`);
+      }
+
       const data = await res.json();
 
       if (data.success) {
         setProfile({ ...profile, banner_url: data.data.url });
+        alert('Banner uploaded successfully!');
       } else {
         alert('Failed to upload banner: ' + data.error);
       }
     } catch (error) {
       console.error('Error uploading banner:', error);
-      alert('Error uploading banner');
+      alert('Error uploading banner: ' + error.message);
     } finally {
       setUploading({ ...uploading, banner: false });
     }
@@ -256,16 +264,24 @@ export default function ProfilePage() {
         body: formData
       });
 
+      // Check if response is ok before parsing JSON
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Photo upload failed:', res.status, errorText);
+        throw new Error(`Upload failed (${res.status}): ${errorText}`);
+      }
+
       const data = await res.json();
 
       if (data.success) {
         setProfile({ ...profile, profile_photo_url: data.data.url });
+        alert('Profile photo uploaded successfully!');
       } else {
         alert('Failed to upload photo: ' + data.error);
       }
     } catch (error) {
       console.error('Error uploading photo:', error);
-      alert('Error uploading photo');
+      alert('Error uploading photo: ' + error.message);
     } finally {
       setUploading({ ...uploading, photo: false });
     }
