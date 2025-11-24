@@ -1602,10 +1602,14 @@ async function handleUploadProfileBanner(request) {
 // ==================== MAIN ROUTE HANDLER ====================
 
 // Route handler function
-async function handleRoute(request, { params }) {
+async function handleRoute(request, context) {
+  // In Next.js 14+, params might be a Promise
+  const params = await Promise.resolve(context.params)
   const { path = [] } = params
   const route = `/${path.join('/')}`
   const method = request.method
+  
+  console.log('[API Route]', method, route, '(path:', path, ')')
 
   try {
     const db = await connectToMongo()

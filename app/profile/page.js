@@ -54,14 +54,21 @@ export default function ProfilePage() {
       const token = session.access_token;
 
       // Fetch profile
+      console.log('Fetching profile from /api/profile with token:', token?.substring(0, 20) + '...');
       const profileRes = await fetch('/api/profile', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
       
+      console.log('Profile response status:', profileRes.status);
+      console.log('Profile response headers:', Object.fromEntries(profileRes.headers.entries()));
+      
       if (!profileRes.ok) {
+        const errorText = await profileRes.text();
         console.error('Profile fetch failed with status:', profileRes.status);
+        console.error('Error response:', errorText);
         setError(`Failed to load profile (Status: ${profileRes.status})`);
         setLoading(false);
         return;
