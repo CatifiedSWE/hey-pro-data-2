@@ -284,6 +284,18 @@ backend:
         agent: "main"
         comment: "Added session detection to root page, login page, and sign-up page. Authenticated users with active sessions are now automatically redirected to /home (if profile exists) or /auth/form (if profile incomplete). Prevents logged-in users from seeing auth pages unnecessarily."
 
+  - task: "Profile Banner Upload Endpoint"
+    implemented: true
+    working: "pending_test"
+    file: "/app/app/api/[[...path]]/route.js, /app/lib/supabaseServer.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "Created POST /api/upload/profile-banner endpoint for uploading profile banner images. Validates file type (JPEG, PNG, WEBP) and size (2MB max). Uploads to Supabase 'profile-banner' storage bucket and updates user_profiles.banner_url with public URL. Updated uploadFile helper function to support profile-banner bucket as public bucket. Same RLS policies as profile-photos bucket apply."
+
 frontend:
   - task: "OTP Resend UI with Countdown Timer"
     implemented: true
@@ -325,3 +337,5 @@ agent_communication:
     message: "Fixed PKCE OAuth error and auto-redirect issues: 1) PKCE Error Fix - Modified AdaptiveStorage in supabase.js to always use localStorage for PKCE-related keys (code verifier). This ensures OAuth callback can access the code verifier. getItem now checks localStorage first, then sessionStorage. 2) Auto-redirect to Home - Added session checks to root page (/), login page, and sign-up page. Users with active sessions are now automatically redirected to /home (if profile exists) or /auth/form (if no profile). No more showing login/signup pages to already authenticated users."
   - agent: "main"
     message: "✅ PHASE 4 & 5 COMPLETE - Implemented complete backend API and notification system. Created 31 API endpoints covering all requirements: Gigs Management (CRUD + listing with pagination/search), Applications (apply, view, status updates), Skills Management, Availability Tracking, Contacts, Referrals, Notifications (in-app with auto-creation), Profile Management, and File Uploads (resume, portfolio, profile photo). All endpoints include: JWT authentication, authorization checks, input validation, error handling, CORS support, and RLS integration. Notification system automatically triggers on key events (application received, status changed, referrals). Created comprehensive API documentation at /app/API_DOCUMENTATION.md with all endpoint specs, examples, and testing guides. Backend is now ready for frontend integration."
+  - agent: "main"
+    message: "✅ PROFILE PAGE IMPLEMENTATION COMPLETE - Created comprehensive profile page at /app/app/profile/page.js with the following features: 1) Profile banner and photo with edit-on-hover functionality, 2) Real-time data fetching from user_profiles and applicant_skills tables, 3) Editable bio and name fields with save/cancel buttons, 4) Skills section displaying user skills from database, 5) Hard-coded Credits section (ready for future database integration), 6) Hard-coded sidebar highlight cards showing cinematography work, 7) Image upload functionality for both banner and profile photo, 8) New backend endpoint POST /api/upload/profile-banner for banner uploads, 9) Updated uploadFile helper to support profile-banner bucket, 10) Responsive design following the provided mockup. All edit functionality works on hover, and uploads are handled securely through Supabase storage with proper RLS policies."

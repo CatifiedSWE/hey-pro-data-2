@@ -1480,6 +1480,64 @@ async function handleUploadProfilePhoto(request) {
   }
 }
 
+// POST /api/upload/profile-banner - Upload profile banner
+async function handleUploadProfileBanner(request) {
+  try {
+    const { user, error: authError } = await getAuthUser(request)
+    if (authError || !user) {
+      return unauthorizedResponse('Authentication required')
+    }
+
+    const formData = await request.formData()
+    const file = formData.get('file')
+
+    if (!file) {
+      return errorResponse('No file provided')
+    }
+
+    // Validate file (same limits as profile photo)
+    const validation = validateFile(file, FILE_SIZE_LIMITS.PROFILE_PHOTO, ALLOWED_MIME_TYPES.PROFILE_PHOTO)
+    if (!validation.valid) {
+      return errorResponse(validation.error, 400)
+    }
+
+    // Generate file path
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const filePath = `${user.id}/${fileName}`
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Upload to Supabase Storage
+    const { data, error } = await uploadFile('profile-banner', filePath, file, buffer)
+
+    if (error) {
+      return errorResponse('Failed to upload profile banner', 500)
+    }
+
+    // Get public URL for banner
+    const { data: urlData } = supabaseServer.storage
+      .from('profile-banner')
+      .getPublicUrl(filePath)
+
+    // Update user profile with banner URL
+    await supabaseServer
+      .from('user_profiles')
+      .update({ banner_url: urlData.publicUrl })
+      .eq('user_id', user.id)
+
+    return successResponse({
+      path: data.path,
+      url: urlData.publicUrl
+    }, 'Profile banner uploaded successfully')
+  } catch (error) {
+    console.error('Error uploading profile banner:', error)
+    return errorResponse('Failed to upload profile banner', 500)
+  }
+}
+
 // ==================== MAIN ROUTE HANDLER ====================
 
 // Route handler function
@@ -1675,6 +1733,10 @@ async function handleRoute(request, { params }) {
 
     if (route === '/upload/profile-photo' && method === 'POST') {
       return handleCORS(await handleUploadProfilePhoto(request))
+    }
+
+    if (route === '/upload/profile-banner' && method === 'POST') {
+      return handleCORS(await handleUploadProfileBanner(request))
     }
 
     // Route not found
