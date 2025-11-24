@@ -31,18 +31,18 @@ export async function POST(request) {
 
     console.log('[POST /api/upload/profile-banner] Uploading for user_id:', user.id)
 
-    // Generate file path - use profile-photos bucket with banner subdirectory
+    // Generate file path
     const fileExt = file.name.split('.').pop()
-    const fileName = `banner_${Date.now()}.${fileExt}`
+    const fileName = `${Date.now()}.${fileExt}`
     const filePath = `${user.id}/${fileName}`
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage (using profile-photos bucket for both photos and banners)
-    console.log('[POST /api/upload/profile-banner] Attempting upload to bucket: profile-photos, path:', filePath)
-    const { data, error } = await uploadFile('profile-photos', filePath, file, buffer)
+    // Upload to Supabase Storage (profile-banner bucket)
+    console.log('[POST /api/upload/profile-banner] Attempting upload to bucket: profile-banner, path:', filePath)
+    const { data, error } = await uploadFile('profile-banner', filePath, file, buffer)
 
     if (error) {
       console.error('[POST /api/upload/profile-banner] Upload error:', JSON.stringify(error, null, 2))
