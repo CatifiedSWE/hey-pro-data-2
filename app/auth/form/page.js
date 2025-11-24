@@ -90,13 +90,14 @@ export default function FormPage() {
       }
 
       // Save profile to Supabase
+      // Using database field names: first_name and surname (not legal_first_name/legal_surname)
       const { data, error } = await supabase
         .from('user_profiles')
         .insert([
           {
             user_id: currentUser.id,
-            legal_first_name: formData.firstName.trim(),
-            legal_surname: formData.surname.trim(),
+            first_name: formData.firstName.trim(),
+            surname: formData.surname.trim(),
             alias_first_name: formData.aliasFirstName.trim() || null,
             alias_surname: formData.aliasSurname.trim() || null,
             country: formData.country,

@@ -312,14 +312,17 @@ frontend:
   - task: "Profile Page Field Name Mismatch Fix"
     implemented: true
     working: "pending_test"
-    file: "/app/app/profile/page.js, /app/app/auth/form/page.js"
+    file: "/app/app/profile/page.js, /app/app/auth/form/page.js, /app/app/api/[[...path]]/route.js, /app/lib/supabaseServer.js"
     stuck_count: 0
     priority: "critical"
     needs_retesting: true
     status_history:
       - working: "pending_test"
         agent: "main"
-        comment: "CRITICAL FIX: Fixed profile page error where users couldn't access their profile after signup. Root cause was field name mismatch - form page was saving profiles with 'first_name' and 'surname' fields, but profile page was trying to read 'legal_first_name' and 'legal_surname' fields. Fixed by: 1) Updated form page to save with correct field names (legal_first_name, legal_surname) matching API schema, 2) Added backward compatibility in profile page to handle both old and new field names, 3) Enhanced error handling with better session validation and HTTP response checking, 4) Added comprehensive console logging for debugging, 5) Made displayName computation safer with fallback to 'User' if no name available, 6) Skills fetch errors are now non-critical and won't break the page."
+        comment: "CRITICAL FIX: Fixed profile page error where users couldn't access their profile after signup. Root cause was field name mismatch - form page was saving profiles with 'first_name' and 'surname' fields, but profile page was trying to read 'legal_first_name' and 'legal_surname' fields. Fixed by: 1) Updated form page to save with correct field names (legal_first_name, legal_surname) matching API schema, 2) Added backward compatibility in profile page to handle both old and new field names, 3) Enhanced error handling with proper session validation and HTTP response checking, 4) Added comprehensive console logging for debugging, 5) Made displayName computation safer with fallback to 'User' if no name available, 6) Skills fetch errors are now non-critical and won't break the page."
+      - working: "pending_test"
+        agent: "main"
+        comment: "🔧 ROOT CAUSE FIX: User reported that Supabase database has 'first_name' and 'surname' columns (NOT 'legal_first_name' and 'legal_surname'). This was causing API 404 errors. FIXED: 1) Updated /app/app/auth/form/page.js to insert using correct DB field names (first_name, surname), 2) Updated /app/app/api/[[...path]]/route.js GET /api/profile to map DB fields to API fields for backward compatibility, 3) Updated PATCH /api/profile to accept both API field names and DB field names with proper mapping, 4) Updated /app/lib/supabaseServer.js checkProfileComplete() to support both field name formats. Now the system uses the actual database schema (first_name, surname) internally while maintaining API compatibility with legal_first_name/legal_surname for existing code. Profile page should now work correctly with proper data fetching."
 
 metadata:
   created_by: "main_agent"

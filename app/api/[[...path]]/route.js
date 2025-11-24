@@ -1251,7 +1251,16 @@ async function handleGetProfile(request) {
       return notFoundResponse('Profile not found')
     }
 
-    return successResponse(data)
+    // Map database fields to API fields for consistency
+    // Database has: first_name, surname
+    // API returns: legal_first_name, legal_surname (for backward compatibility)
+    const profileData = {
+      ...data,
+      legal_first_name: data.legal_first_name || data.first_name,
+      legal_surname: data.legal_surname || data.surname
+    }
+
+    return successResponse(profileData)
   } catch (error) {
     console.error('Error fetching profile:', error)
     return errorResponse('Failed to fetch profile', 500)
@@ -1267,22 +1276,31 @@ async function handleUpdateProfile(request) {
     }
 
     const body = await request.json()
-    const allowedFields = [
-      'legal_first_name',
-      'legal_surname',
-      'alias_first_name',
-      'alias_surname',
-      'phone',
-      'bio',
-      'profile_photo_url',
-      'country',
-      'city'
-    ]
+    
+    // Map API field names to database field names
+    // API accepts: legal_first_name, legal_surname
+    // Database has: first_name, surname
+    const fieldMapping = {
+      'legal_first_name': 'first_name',
+      'legal_surname': 'surname',
+      'alias_first_name': 'alias_first_name',
+      'alias_surname': 'alias_surname',
+      'phone': 'phone',
+      'bio': 'bio',
+      'profile_photo_url': 'profile_photo_url',
+      'banner_url': 'banner_url',
+      'country': 'country',
+      'city': 'city'
+    }
 
     const updateData = {}
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field]
+    for (const [apiField, dbField] of Object.entries(fieldMapping)) {
+      if (body[apiField] !== undefined) {
+        updateData[dbField] = body[apiField]
+      }
+      // Also support direct database field names
+      if (body[dbField] !== undefined) {
+        updateData[dbField] = body[dbField]
       }
     }
 
@@ -1301,10 +1319,17 @@ async function handleUpdateProfile(request) {
       return errorResponse(error.message, 500)
     }
 
+    // Map response back to API field names for consistency
+    const responseData = {
+      ...data,
+      legal_first_name: data.legal_first_name || data.first_name,
+      legal_surname: data.legal_surname || data.surname
+    }
+
     // Re-check profile completeness
     await checkProfileComplete(user.id)
 
-    return successResponse(data, 'Profile updated successfully')
+    return successResponse(responseData, 'Profile updated successfully')
   } catch (error) {
     console.error('Error updating profile:', error)
     return errorResponse('Failed to update profile', 500)
