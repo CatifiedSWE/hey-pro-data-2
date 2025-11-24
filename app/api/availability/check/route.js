@@ -4,7 +4,12 @@ import { createAuthenticatedClient, supabaseServer, successResponse, errorRespon
 // GET /api/availability/check - Check availability conflicts
 export async function GET(request) {
   try {
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

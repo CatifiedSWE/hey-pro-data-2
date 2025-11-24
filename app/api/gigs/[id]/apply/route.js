@@ -6,7 +6,12 @@ export async function POST(request, { params }) {
   try {
     const { id: gigId } = await Promise.resolve(params)
     
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

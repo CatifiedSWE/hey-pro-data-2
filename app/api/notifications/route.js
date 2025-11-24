@@ -4,7 +4,12 @@ import { createAuthenticatedClient, supabaseServer, successResponse, errorRespon
 // GET /api/notifications - Get user's notifications
 export async function GET(request) {
   try {
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

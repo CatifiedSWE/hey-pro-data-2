@@ -4,7 +4,12 @@ import { createAuthenticatedClient, supabaseServer, successResponse, errorRespon
 // PATCH /api/notifications/mark-all-read - Mark all notifications as read
 export async function PATCH(request) {
   try {
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

@@ -4,7 +4,12 @@ import { createAuthenticatedClient, supabaseServer, successResponse, errorRespon
 // GET /api/referrals - Get user's referrals
 export async function GET(request) {
   try {
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -62,7 +67,12 @@ export async function GET(request) {
 // POST /api/referrals - Create referral
 export async function POST(request) {
   try {
-    const supabase = createAuthenticatedClient(request) || supabaseServer
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
