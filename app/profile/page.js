@@ -69,6 +69,14 @@ export default function ProfilePage() {
         const errorText = await profileRes.text();
         console.error('Profile fetch failed with status:', profileRes.status);
         console.error('Error response:', errorText);
+        
+        // If profile not found (404), redirect to profile form to create one
+        if (profileRes.status === 404) {
+          console.log('Profile not found, redirecting to profile form...');
+          router.push('/auth/form');
+          return;
+        }
+        
         setError(`Failed to load profile (Status: ${profileRes.status})`);
         setLoading(false);
         return;
