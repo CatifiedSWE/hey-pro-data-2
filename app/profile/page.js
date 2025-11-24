@@ -1,128 +1,291 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 
-// Fake data for profile
-const FAKE_PROFILE = {
-  legal_first_name: 'Alex',
-  legal_surname: 'Thompson',
-  alias_first_name: 'Xander',
-  alias_surname: 'Stone',
-  city: 'Dubai',
-  country: 'UAE',
-  bio: "I'm a passionate cinematographer who believes in the power of visual storytelling. I've had the privilege of working on everything from intimate indie films to large-scale commercial productions. My approach blends technical precision with creative vision, always striving to serve the story and evoke emotion through imagery.",
-  banner_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&h=400&fit=crop',
-  profile_photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200'
-};
-
-// Fake skills data
-const FAKE_SKILLS = [
-  { id: '1', skill_name: 'Cinematography' },
-  { id: '2', skill_name: 'Color Grading' },
-  { id: '3', skill_name: 'Camera Operation' },
-  { id: '4', skill_name: 'Lighting Design' }
-];
-
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(FAKE_PROFILE);
-  const [skills, setSkills] = useState(FAKE_SKILLS);
+  const router = useRouter();
+  const [profile, setProfile] = useState(null);
+  const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState({
     bio: false,
     name: false
   });
   const [editedData, setEditedData] = useState({
-    bio: FAKE_PROFILE.bio,
-    legal_first_name: FAKE_PROFILE.legal_first_name,
-    legal_surname: FAKE_PROFILE.legal_surname,
-    alias_first_name: FAKE_PROFILE.alias_first_name,
-    alias_surname: FAKE_PROFILE.alias_surname
+    bio: '',
+    legal_first_name: '',
+    legal_surname: '',
+    alias_first_name: '',
+    alias_surname: ''
   });
   const [uploading, setUploading] = useState({
     banner: false,
     photo: false
   });
+  const [savingBio, setSavingBio] = useState(false);
+  const [savingName, setSavingName] = useState(false);
 
   const bannerInputRef = useRef(null);
   const photoInputRef = useRef(null);
 
-  // Simulate loading
+  // Fetch profile and skills on mount
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    fetchProfileData();
   }, []);
 
-  const handleBannerUpload = (e) => {
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const token = session.access_token;
+
+      // Fetch profile
+      const profileRes = await fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const profileData = await profileRes.json();
+
+      if (profileData.success) {
+        setProfile(profileData.data);
+        setEditedData({
+          bio: profileData.data.bio || '',
+          legal_first_name: profileData.data.legal_first_name || '',
+          legal_surname: profileData.data.legal_surname || '',
+          alias_first_name: profileData.data.alias_first_name || '',
+          alias_surname: profileData.data.alias_surname || ''
+        });
+      } else {
+        setError('Failed to load profile');
+      }
+
+      // Fetch skills
+      const skillsRes = await fetch('/api/skills', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const skillsData = await skillsRes.json();
+
+      if (skillsData.success) {
+        setSkills(skillsData.data || []);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setError('Error loading profile. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleBannerUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a JPEG, PNG, or WEBP image');
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
 
     setUploading({ ...uploading, banner: true });
 
-    // Simulate upload and create local URL
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTimeout(() => {
-        setProfile({ ...profile, banner_url: reader.result });
-        setUploading({ ...uploading, banner: false });
-      }, 1000);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session.access_token;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload/profile-banner', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProfile({ ...profile, banner_url: data.data.url });
+      } else {
+        alert('Failed to upload banner: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      alert('Error uploading banner');
+    } finally {
+      setUploading({ ...uploading, banner: false });
+    }
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a JPEG, PNG, or WEBP image');
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
     setUploading({ ...uploading, photo: true });
 
-    // Simulate upload and create local URL
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTimeout(() => {
-        setProfile({ ...profile, profile_photo_url: reader.result });
-        setUploading({ ...uploading, photo: false });
-      }, 1000);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session.access_token;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload/profile-photo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProfile({ ...profile, profile_photo_url: data.data.url });
+      } else {
+        alert('Failed to upload photo: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Error uploading photo');
+    } finally {
+      setUploading({ ...uploading, photo: false });
+    }
   };
 
-  const handleSaveBio = () => {
-    // Simulate saving
-    setProfile({ ...profile, bio: editedData.bio });
-    setEditMode({ ...editMode, bio: false });
+  const handleSaveBio = async () => {
+    setSavingBio(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session.access_token;
+
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ bio: editedData.bio })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProfile({ ...profile, bio: editedData.bio });
+        setEditMode({ ...editMode, bio: false });
+      } else {
+        alert('Failed to update bio: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error updating bio:', error);
+      alert('Error updating bio');
+    } finally {
+      setSavingBio(false);
+    }
   };
 
-  const handleSaveName = () => {
-    // Simulate saving
-    setProfile({
-      ...profile,
-      legal_first_name: editedData.legal_first_name,
-      legal_surname: editedData.legal_surname,
-      alias_first_name: editedData.alias_first_name,
-      alias_surname: editedData.alias_surname
-    });
-    setEditMode({ ...editMode, name: false });
+  const handleSaveName = async () => {
+    setSavingName(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session.access_token;
+
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          legal_first_name: editedData.legal_first_name,
+          legal_surname: editedData.legal_surname,
+          alias_first_name: editedData.alias_first_name,
+          alias_surname: editedData.alias_surname
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProfile(data.data);
+        setEditMode({ ...editMode, name: false });
+      } else {
+        alert('Failed to update name: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error updating name:', error);
+      alert('Error updating name');
+    } finally {
+      setSavingName(false);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-      
+        <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-600">Loading profile...</div>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FA6E80]"></div>
+            <div className="text-gray-600">Loading profile...</div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <div className="min-h-screen bg-gray-50">
-      
+        <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-600">Profile not found</div>
+          <div className="text-center">
+            <div className="text-gray-600 mb-4">{error || 'Profile not found'}</div>
+            <button 
+              onClick={fetchProfileData}
+              className="px-6 py-2 bg-[#FA6E80] text-white rounded-lg hover:bg-[#e95d6f] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -134,7 +297,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-   
+      <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -147,22 +310,36 @@ export default function ProfilePage() {
                 className="w-full h-64 relative group cursor-pointer"
                 onClick={() => bannerInputRef.current?.click()}
               >
-                <img 
-                  src={profile.banner_url || 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&h=400&fit=crop'}
-                  alt="Profile Banner" 
-                  className="w-full h-full object-cover"
-                />
+                {profile.banner_url ? (
+                  <img 
+                    src={profile.banner_url}
+                    alt="Profile Banner" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm font-medium">Upload Banner</p>
+                    </div>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white flex items-center space-x-2">
                     {uploading.banner ? (
-                      <span>Uploading...</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Uploading...</span>
+                      </div>
                     ) : (
                       <>
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span className="font-medium">Edit Cover Photo</span>
+                        <span className="font-medium">{profile.banner_url ? 'Change' : 'Upload'} Banner</span>
                       </>
                     )}
                   </div>
@@ -184,22 +361,34 @@ export default function ProfilePage() {
                     className="relative group cursor-pointer"
                     onClick={() => photoInputRef.current?.click()}
                   >
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-gray-200">
-                      <img 
-                        src={profile.profile_photo_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200'}
-                        alt="Profile" 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-gray-100 flex items-center justify-center">
+                      {profile.profile_photo_url ? (
+                        <img 
+                          src={profile.profile_photo_url}
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                      )}
                     </div>
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-full flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-center">
                         {uploading.photo ? (
-                          <span className="text-sm">Uploading...</span>
+                          <div className="flex flex-col items-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mb-1"></div>
+                            <span className="text-xs">Uploading...</span>
+                          </div>
                         ) : (
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
+                          <div className="flex flex-col items-center">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-xs mt-1">{profile.profile_photo_url ? 'Change' : 'Upload'}</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -251,13 +440,25 @@ export default function ProfilePage() {
                         <div className="flex space-x-2">
                           <button
                             onClick={handleSaveName}
-                            className="px-4 py-2 bg-[#FA6E80] text-white rounded-lg hover:bg-[#e95d6f] transition-colors"
+                            disabled={savingName}
+                            className="px-4 py-2 bg-[#FA6E80] text-white rounded-lg hover:bg-[#e95d6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                           >
-                            Save
+                            {savingName && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                            <span>{savingName ? 'Saving...' : 'Save'}</span>
                           </button>
                           <button
-                            onClick={() => setEditMode({ ...editMode, name: false })}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            onClick={() => {
+                              setEditedData({
+                                ...editedData,
+                                legal_first_name: profile.legal_first_name || '',
+                                legal_surname: profile.legal_surname || '',
+                                alias_first_name: profile.alias_first_name || '',
+                                alias_surname: profile.alias_surname || ''
+                              });
+                              setEditMode({ ...editMode, name: false });
+                            }}
+                            disabled={savingName}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Cancel
                           </button>
@@ -298,16 +499,19 @@ export default function ProfilePage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={handleSaveBio}
-                          className="px-4 py-2 bg-[#FA6E80] text-white rounded-lg hover:bg-[#e95d6f] transition-colors"
+                          disabled={savingBio}
+                          className="px-4 py-2 bg-[#FA6E80] text-white rounded-lg hover:bg-[#e95d6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                         >
-                          Save
+                          {savingBio && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                          <span>{savingBio ? 'Saving...' : 'Save'}</span>
                         </button>
                         <button
                           onClick={() => {
                             setEditedData({ ...editedData, bio: profile.bio || '' });
                             setEditMode({ ...editMode, bio: false });
                           }}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          disabled={savingBio}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Cancel
                         </button>
@@ -315,9 +519,18 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="relative">
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {profile.bio || 'No bio added yet. Click edit to add your bio.'}
-                      </p>
+                      {profile.bio ? (
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {profile.bio}
+                        </p>
+                      ) : (
+                        <div className="flex items-center space-x-2 text-gray-400 italic">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          <p className="text-sm">Add a bio to tell others about yourself</p>
+                        </div>
+                      )}
                       <button
                         onClick={() => setEditMode({ ...editMode, bio: true })}
                         className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
@@ -405,8 +618,12 @@ export default function ProfilePage() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No skills added yet. Add your professional skills to showcase your expertise.
+                  <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+                    <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-gray-500 font-medium">No skills added yet</p>
+                    <p className="text-gray-400 text-sm mt-1">Add your professional skills to showcase your expertise</p>
                   </div>
                 )}
               </div>
@@ -415,9 +632,18 @@ export default function ProfilePage() {
             {/* About Section */}
             <div className="bg-white rounded-2xl shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">About</h2>
-              <p className="text-gray-700 leading-relaxed">
-                {profile.bio || "I'm a passionate cinematographer who believes in the power of visual storytelling. I've had the privilege of working on everything from intimate indie films to large-scale commercial productions."}
-              </p>
+              {profile.bio ? (
+                <p className="text-gray-700 leading-relaxed">
+                  {profile.bio}
+                </p>
+              ) : (
+                <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                  <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <p className="text-gray-400 italic text-sm">No bio added yet. Add your bio above to showcase your story.</p>
+                </div>
+              )}
             </div>
           </section>
 
