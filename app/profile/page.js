@@ -1,25 +1,43 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 
+// Fake data for profile
+const FAKE_PROFILE = {
+  legal_first_name: 'Alex',
+  legal_surname: 'Thompson',
+  alias_first_name: 'Xander',
+  alias_surname: 'Stone',
+  city: 'Dubai',
+  country: 'UAE',
+  bio: "I'm a passionate cinematographer who believes in the power of visual storytelling. I've had the privilege of working on everything from intimate indie films to large-scale commercial productions. My approach blends technical precision with creative vision, always striving to serve the story and evoke emotion through imagery.",
+  banner_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&h=400&fit=crop',
+  profile_photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200'
+};
+
+// Fake skills data
+const FAKE_SKILLS = [
+  { id: '1', skill_name: 'Cinematography' },
+  { id: '2', skill_name: 'Color Grading' },
+  { id: '3', skill_name: 'Camera Operation' },
+  { id: '4', skill_name: 'Lighting Design' }
+];
+
 export default function ProfilePage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState(null);
-  const [skills, setSkills] = useState([]);
+  const [profile, setProfile] = useState(FAKE_PROFILE);
+  const [skills, setSkills] = useState(FAKE_SKILLS);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({
     bio: false,
     name: false
   });
   const [editedData, setEditedData] = useState({
-    bio: '',
-    legal_first_name: '',
-    legal_surname: '',
-    alias_first_name: '',
-    alias_surname: ''
+    bio: FAKE_PROFILE.bio,
+    legal_first_name: FAKE_PROFILE.legal_first_name,
+    legal_surname: FAKE_PROFILE.legal_surname,
+    alias_first_name: FAKE_PROFILE.alias_first_name,
+    alias_surname: FAKE_PROFILE.alias_surname
   });
   const [uploading, setUploading] = useState({
     banner: false,
@@ -29,217 +47,69 @@ export default function ProfilePage() {
   const bannerInputRef = useRef(null);
   const photoInputRef = useRef(null);
 
-  // Fetch profile and skills on mount
+  // Simulate loading
   useEffect(() => {
-    fetchProfileData();
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   }, []);
 
-  const fetchProfileData = async () => {
-    try {
-      console.log('Fetching profile data...');
-      
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No session found, redirecting to login');
-        setLoading(false);
-        router.push('/auth/login');
-        return;
-      }
-
-      console.log('Session found, user ID:', session.user?.id);
-      const token = session.access_token;
-
-      // Fetch profile
-      console.log('Fetching profile from API...');
-      const profileRes = await fetch('/api/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      console.log('Profile response status:', profileRes.status);
-      const profileData = await profileRes.json();
-      console.log('Profile data:', profileData);
-
-      if (profileData.success) {
-        console.log('Profile loaded successfully');
-        setProfile(profileData.data);
-        setEditedData({
-          bio: profileData.data.bio || '',
-          legal_first_name: profileData.data.legal_first_name || '',
-          legal_surname: profileData.data.legal_surname || '',
-          alias_first_name: profileData.data.alias_first_name || '',
-          alias_surname: profileData.data.alias_surname || ''
-        });
-      } else {
-        console.error('Failed to fetch profile:', profileData.error);
-        alert('Failed to load profile: ' + (profileData.error || 'Unknown error'));
-      }
-
-      // Fetch skills
-      console.log('Fetching skills from API...');
-      const skillsRes = await fetch('/api/skills', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const skillsData = await skillsRes.json();
-      console.log('Skills data:', skillsData);
-
-      if (skillsData.success) {
-        console.log('Skills loaded successfully, count:', skillsData.data?.length || 0);
-        setSkills(skillsData.data || []);
-      } else {
-        console.error('Failed to fetch skills:', skillsData.error);
-      }
-
-      setLoading(false);
-      console.log('Profile page loaded successfully');
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      alert('Error loading profile. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleBannerUpload = async (e) => {
+  const handleBannerUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading({ ...uploading, banner: true });
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session.access_token;
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload/profile-banner', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setProfile({ ...profile, banner_url: data.data.url });
-      } else {
-        alert('Failed to upload banner: ' + data.error);
-      }
-    } catch (error) {
-      console.error('Error uploading banner:', error);
-      alert('Error uploading banner');
-    } finally {
-      setUploading({ ...uploading, banner: false });
-    }
+    // Simulate upload and create local URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setTimeout(() => {
+        setProfile({ ...profile, banner_url: reader.result });
+        setUploading({ ...uploading, banner: false });
+      }, 1000);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handlePhotoUpload = async (e) => {
+  const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading({ ...uploading, photo: true });
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session.access_token;
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload/profile-photo', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setProfile({ ...profile, profile_photo_url: data.data.url });
-      } else {
-        alert('Failed to upload photo: ' + data.error);
-      }
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Error uploading photo');
-    } finally {
-      setUploading({ ...uploading, photo: false });
-    }
+    // Simulate upload and create local URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setTimeout(() => {
+        setProfile({ ...profile, profile_photo_url: reader.result });
+        setUploading({ ...uploading, photo: false });
+      }, 1000);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSaveBio = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session.access_token;
-
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ bio: editedData.bio })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setProfile({ ...profile, bio: editedData.bio });
-        setEditMode({ ...editMode, bio: false });
-      } else {
-        alert('Failed to update bio: ' + data.error);
-      }
-    } catch (error) {
-      console.error('Error updating bio:', error);
-      alert('Error updating bio');
-    }
+  const handleSaveBio = () => {
+    // Simulate saving
+    setProfile({ ...profile, bio: editedData.bio });
+    setEditMode({ ...editMode, bio: false });
   };
 
-  const handleSaveName = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session.access_token;
-
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          legal_first_name: editedData.legal_first_name,
-          legal_surname: editedData.legal_surname,
-          alias_first_name: editedData.alias_first_name,
-          alias_surname: editedData.alias_surname
-        })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setProfile(data.data);
-        setEditMode({ ...editMode, name: false });
-      } else {
-        alert('Failed to update name: ' + data.error);
-      }
-    } catch (error) {
-      console.error('Error updating name:', error);
-      alert('Error updating name');
-    }
+  const handleSaveName = () => {
+    // Simulate saving
+    setProfile({
+      ...profile,
+      legal_first_name: editedData.legal_first_name,
+      legal_surname: editedData.legal_surname,
+      alias_first_name: editedData.alias_first_name,
+      alias_surname: editedData.alias_surname
+    });
+    setEditMode({ ...editMode, name: false });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      
         <div className="flex items-center justify-center h-96">
           <div className="text-gray-600">Loading profile...</div>
         </div>
@@ -250,7 +120,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      
         <div className="flex items-center justify-center h-96">
           <div className="text-gray-600">Profile not found</div>
         </div>
@@ -264,7 +134,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+   
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
