@@ -443,8 +443,8 @@ async function handleGetGigApplications(request, gigId) {
       .select(`
         *,
         applicant:user_profiles!applications_applicant_user_id_fkey (
-          legal_first_name,
-          legal_surname,
+          first_name,
+          surname,
           alias_first_name,
           alias_surname,
           profile_photo_url,
@@ -473,12 +473,17 @@ async function handleGetGigApplications(request, gigId) {
           .select('skill_name')
           .eq('user_id', app.applicant_user_id)
 
+        // Map database field names to API field names for backward compatibility
+        const mappedApplicant = app.applicant ? {
+          ...app.applicant,
+          legal_first_name: app.applicant.first_name,
+          legal_surname: app.applicant.surname,
+          skills: skills?.map(s => s.skill_name) || []
+        } : null;
+
         return {
           ...app,
-          applicant: {
-            ...app.applicant,
-            skills: skills?.map(s => s.skill_name) || []
-          }
+          applicant: mappedApplicant
         }
       })
     )
@@ -920,8 +925,8 @@ async function handleGetGigContacts(request, gigId) {
       .select(`
         *,
         user:user_profiles!crew_contacts_user_id_fkey (
-          legal_first_name,
-          legal_surname,
+          first_name,
+          surname,
           profile_photo_url
         )
       `)
@@ -932,7 +937,17 @@ async function handleGetGigContacts(request, gigId) {
       return errorResponse(error.message, 500)
     }
 
-    return successResponse(data)
+    // Map database field names to API field names
+    const mappedData = data?.map(contact => ({
+      ...contact,
+      user: contact.user ? {
+        ...contact.user,
+        legal_first_name: contact.user.first_name,
+        legal_surname: contact.user.surname
+      } : null
+    })) || [];
+
+    return successResponse(mappedData)
   } catch (error) {
     console.error('Error fetching contacts:', error)
     return errorResponse('Failed to fetch contacts', 500)
@@ -1044,13 +1059,13 @@ async function handleGetReferrals(request) {
         *,
         gig:gigs (id, title, description, status),
         referred_user:user_profiles!referrals_referred_user_id_fkey (
-          legal_first_name,
-          legal_surname,
+          first_name,
+          surname,
           profile_photo_url
         ),
         referrer:user_profiles!referrals_referrer_user_id_fkey (
-          legal_first_name,
-          legal_surname,
+          first_name,
+          surname,
           profile_photo_url
         )
       `)
@@ -1061,7 +1076,22 @@ async function handleGetReferrals(request) {
       return errorResponse(error.message, 500)
     }
 
-    return successResponse(data)
+    // Map database field names to API field names
+    const mappedData = data?.map(referral => ({
+      ...referral,
+      referred_user: referral.referred_user ? {
+        ...referral.referred_user,
+        legal_first_name: referral.referred_user.first_name,
+        legal_surname: referral.referred_user.surname
+      } : null,
+      referrer: referral.referrer ? {
+        ...referral.referrer,
+        legal_first_name: referral.referrer.first_name,
+        legal_surname: referral.referrer.surname
+      } : null
+    })) || [];
+
+    return successResponse(mappedData)
   } catch (error) {
     console.error('Error fetching referrals:', error)
     return errorResponse('Failed to fetch referrals', 500)
@@ -1256,8 +1286,11 @@ async function handleGetProfile(request) {
     // API returns: legal_first_name, legal_surname (for backward compatibility)
     const profileData = {
       ...data,
-      legal_first_name: data.legal_first_name || data.first_name,
-      legal_surname: data.legal_surname || data.surname
+      legal_first_name: data.first_name,
+      legal_surname: data.surname,
+      // Keep original fields too for compatibility
+      first_name: data.first_name,
+      surname: data.surname
     }
 
     return successResponse(profileData)
@@ -1322,8 +1355,11 @@ async function handleUpdateProfile(request) {
     // Map response back to API field names for consistency
     const responseData = {
       ...data,
-      legal_first_name: data.legal_first_name || data.first_name,
-      legal_surname: data.legal_surname || data.surname
+      legal_first_name: data.first_name,
+      legal_surname: data.surname,
+      // Keep original fields too for compatibility
+      first_name: data.first_name,
+      surname: data.surname
     }
 
     // Re-check profile completeness
