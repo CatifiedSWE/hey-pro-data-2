@@ -344,6 +344,8 @@ test_plan:
 
 agent_communication:
   - agent: "main"
+    message: "🔍 INVESTIGATING /api/profile 404 ERROR - User reports persistent 404 when accessing /api/profile endpoint. Initial investigation shows: 1) API route IS implemented in /app/app/api/[[...path]]/route.js (lines 1743-1753), 2) handleGetProfile function exists and has proper logging (lines 1252-1302), 3) Frontend fetch looks correct with proper Authorization header, 4) Fixed potential bug in handleRoute function - added better error handling for undefined context, 5) Removed duplicate try block syntax error, 6) Added comprehensive logging to track routing. Currently testing to identify root cause of 404 errors."
+  - agent: "main"
     message: "Fixed all reported authentication issues. Ready for testing. Key fixes: 1) Duplicate email prevention with clear error messages, 2) 60-second OTP cooldown with visual timer, 3) Proper session persistence, 4) Email normalization, 5) Better error handling throughout."
   - agent: "main"
     message: "Fixed two new authentication issues: 1) Google OAuth callback now has robust error handling to prevent false errors when checking user profiles - wraps profile check in try-catch and treats errors as 'no profile' instead of blocking flow. 2) Password reset now shows success message on same page without redirecting to OTP page - displays 'A password reset link has been sent to [email]' message."
