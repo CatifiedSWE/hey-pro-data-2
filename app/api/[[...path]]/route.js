@@ -1617,8 +1617,6 @@ async function handleRoute(request, context) {
     console.log('[API Route] Path array:', path)
     console.log('[API Route] Context:', context ? 'present' : 'missing')
     console.log('[API Route] Request URL:', request.url)
-
-  try {
     // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
     if (route === '/root' && method === 'GET') {
       return handleCORS(NextResponse.json({ message: "HeyProData API v1.0 - Supabase Backend" }))
