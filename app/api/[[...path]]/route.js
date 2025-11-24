@@ -1604,13 +1604,19 @@ async function handleUploadProfileBanner(request) {
 
 // Route handler function
 async function handleRoute(request, context) {
-  // In Next.js 14+, params might be a Promise
-  const params = await Promise.resolve(context.params)
-  const { path = [] } = params
-  const route = `/${path.join('/')}`
-  const method = request.method
-  
-  console.log('[API Route]', method, route, '(path:', path, ')')
+  try {
+    // In Next.js 14+, params might be a Promise
+    // Also handle case where context might be undefined
+    const params = context && context.params ? await Promise.resolve(context.params) : {}
+    const { path = [] } = params
+    const route = `/${path.join('/')}`
+    const method = request.method
+    
+    console.log('[API Route] Method:', method)
+    console.log('[API Route] Route:', route)
+    console.log('[API Route] Path array:', path)
+    console.log('[API Route] Context:', context ? 'present' : 'missing')
+    console.log('[API Route] Request URL:', request.url)
 
   try {
     // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
