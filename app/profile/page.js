@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/layout/Navbar';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -261,7 +260,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+       
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FA6E80]"></div>
@@ -275,7 +274,7 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+  
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="text-gray-600 mb-4">{error || 'Profile not found'}</div>
@@ -297,7 +296,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+ 
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
