@@ -1259,22 +1259,24 @@ async function handleGetProfile(request) {
 
     console.log('[GET /api/profile] Fetching profile for user_id:', user.id)
 
+    // Use maybeSingle() instead of single() to handle case when profile doesn't exist yet
+    // single() throws error if 0 or 2+ rows, maybeSingle() returns null if 0 rows
     const { data, error } = await supabaseServer
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('[GET /api/profile] Database error:', error)
       console.error('[GET /api/profile] Error code:', error.code)
       console.error('[GET /api/profile] Error message:', error.message)
-      return notFoundResponse(`Profile not found: ${error.message}`)
+      return errorResponse(`Database error: ${error.message}`, 500)
     }
 
     if (!data) {
       console.log('[GET /api/profile] No profile data found for user_id:', user.id)
-      return notFoundResponse('Profile not found - no data returned')
+      return notFoundResponse('Profile not found - user has not completed profile form yet')
     }
 
     console.log('[GET /api/profile] Profile found successfully for user_id:', user.id)
