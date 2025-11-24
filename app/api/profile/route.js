@@ -62,7 +62,13 @@ export async function GET(request) {
 // PATCH /api/profile - Update profile
 export async function PATCH(request) {
   try {
-    const supabase = supabaseServer
+    // Create authenticated Supabase client
+    const supabase = createAuthenticatedClient(request)
+    
+    if (!supabase) {
+      return unauthorizedResponse('Authentication required')
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
