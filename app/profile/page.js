@@ -125,12 +125,17 @@ export default function ProfilePage() {
         
         console.log('Profile loaded successfully for user:', session.user.id);
         console.log('Profile fields - first_name:', profile.first_name, 'surname:', profile.surname);
+        console.log('🖼️ Banner URL from API:', profile.banner_url);
+        console.log('📷 Profile Photo URL from API:', profile.profile_photo_url);
         
-        setProfile({
+        const updatedProfile = {
           ...profile,
           legal_first_name: legalFirstName,
           legal_surname: legalSurname
-        });
+        };
+        
+        console.log('🖼️ Banner URL being set in state:', updatedProfile.banner_url);
+        setProfile(updatedProfile);
         
         setEditedData({
           bio: profile.bio || '',
@@ -217,7 +222,9 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (data.success) {
-        setProfile({ ...profile, banner_url: data.data.url });
+        // Force refetch profile data to ensure we have the latest banner_url from database
+        console.log('Banner uploaded successfully, refetching profile data...');
+        await fetchProfileData();
         alert('Banner uploaded successfully!');
       } else {
         alert('Failed to upload banner: ' + data.error);
@@ -274,7 +281,9 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (data.success) {
-        setProfile({ ...profile, profile_photo_url: data.data.url });
+        // Force refetch profile data to ensure we have the latest profile_photo_url from database
+        console.log('Profile photo uploaded successfully, refetching profile data...');
+        await fetchProfileData();
         alert('Profile photo uploaded successfully!');
       } else {
         alert('Failed to upload photo: ' + data.error);

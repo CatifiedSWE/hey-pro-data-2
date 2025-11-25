@@ -42,6 +42,8 @@ export async function GET(request) {
     }
 
     console.log('[GET /api/profile] Profile found successfully')
+    console.log('[GET /api/profile] Banner URL in database:', data.banner_url)
+    console.log('[GET /api/profile] Profile Photo URL in database:', data.profile_photo_url)
 
     // Map database fields to API fields for consistency
     const profileData = {
@@ -51,6 +53,8 @@ export async function GET(request) {
       first_name: data.first_name,
       surname: data.surname
     }
+
+    console.log('[GET /api/profile] Returning profile with banner_url:', profileData.banner_url)
 
     return successResponse(profileData)
   } catch (error) {

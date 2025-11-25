@@ -57,15 +57,24 @@ export async function POST(request) {
     console.log('[POST /api/upload/profile-banner] Upload successful, URL:', data.publicUrl)
 
     // Update user profile with banner URL
-    const { error: updateError } = await supabase
+    console.log('[POST /api/upload/profile-banner] Attempting to update user_profiles.banner_url for user:', user.id)
+    const { data: updateData, error: updateError } = await supabase
       .from('user_profiles')
       .update({ banner_url: data.publicUrl })
       .eq('user_id', user.id)
+      .select()
 
     if (updateError) {
-      console.error('[POST /api/upload/profile-banner] Profile update error:', updateError)
-      // Still return success since file was uploaded
+      console.error('[POST /api/upload/profile-banner] ❌ Profile update FAILED:', JSON.stringify(updateError, null, 2))
+      return errorResponse(`File uploaded but failed to update profile: ${updateError.message}`, 500)
     }
+
+    if (!updateData || updateData.length === 0) {
+      console.error('[POST /api/upload/profile-banner] ❌ Update returned no rows - profile may not exist for user:', user.id)
+      return errorResponse('File uploaded but profile not found in database', 404)
+    }
+
+    console.log('[POST /api/upload/profile-banner] ✅ Profile updated successfully! Banner URL:', updateData[0]?.banner_url)
 
     return successResponse({
       path: data.path,
