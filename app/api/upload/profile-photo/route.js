@@ -40,9 +40,9 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage with authenticated client
     console.log('[POST /api/upload/profile-photo] Attempting upload to bucket: profile-photos, path:', filePath)
-    const { data, error } = await uploadFile('profile-photos', filePath, file, buffer)
+    const { data, error } = await uploadFile('profile-photos', filePath, file, buffer, supabase)
 
     if (error) {
       console.error('[POST /api/upload/profile-photo] Upload error:', JSON.stringify(error, null, 2))

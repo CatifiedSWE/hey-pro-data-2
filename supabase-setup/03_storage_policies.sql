@@ -9,6 +9,7 @@
 --    - "resumes" (Private, 5MB limit, PDF/DOC/DOCX)
 --    - "portfolios" (Private, 10MB limit, PDF/Images/Videos)
 --    - "profile-photos" (Public, 2MB limit, Images only)
+--    - "profile-banner" (Public, 2MB limit, Images only)
 -- 3. Then run this SQL script
 
 -- ============================================
@@ -162,6 +163,50 @@ ON storage.objects FOR DELETE
 TO authenticated
 USING (
     bucket_id = 'profile-photos' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- ============================================
+-- Profile Banner Bucket Policies (Public)
+-- Same policies as profile-photos bucket
+-- ============================================
+
+-- Anyone can view profile banners (public bucket)
+CREATE POLICY "Anyone can view profile banners"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'profile-banner');
+
+-- Authenticated users can view profile banners
+CREATE POLICY "Authenticated users can view profile banners"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (bucket_id = 'profile-banner');
+
+-- Users can upload their own profile banners
+CREATE POLICY "Users can upload their own profile banners"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+    bucket_id = 'profile-banner' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Users can update their own profile banners
+CREATE POLICY "Users can update their own profile banners"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+    bucket_id = 'profile-banner' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Users can delete their own profile banners
+CREATE POLICY "Users can delete their own profile banners"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+    bucket_id = 'profile-banner' AND
     auth.uid()::text = (storage.foldername(name))[1]
 );
 
