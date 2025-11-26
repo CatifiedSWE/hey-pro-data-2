@@ -659,6 +659,64 @@ if (authVerified === 'true') {
 
 ---
 
+### Step 10: Direct Database Operations Pattern
+**Pattern**: All pages that need data
+
+```javascript
+// Import the client-side Supabase client
+import { supabase } from '@/lib/supabase'
+
+// Query user profile directly
+const { data: profile, error } = await supabase
+  .from('user_profiles')
+  .select('*')
+  .eq('user_id', session.user.id)
+  .maybeSingle()
+
+// Insert profile data directly
+const { data, error } = await supabase
+  .from('user_profiles')
+  .insert([{
+    user_id: currentUser.id,
+    first_name: formData.firstName.trim(),
+    surname: formData.surname.trim(),
+    // ... other fields
+  }])
+  .select()
+
+// Update profile directly
+const { error } = await supabase
+  .from('user_profiles')
+  .update({ bio: newBio })
+  .eq('user_id', session.user.id)
+```
+
+**Security Enforcement**:
+```sql
+-- RLS policies ensure users can only access their own data
+-- Example RLS policy:
+CREATE POLICY "Users can view own profile"
+ON user_profiles FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own profile"
+ON user_profiles FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own profile"
+ON user_profiles FOR UPDATE
+USING (auth.uid() = user_id);
+```
+
+**Why**: 
+- No custom API layer needed
+- RLS policies automatically enforce security
+- Simpler codebase with fewer moving parts
+- Supabase handles authentication context automatically
+- Direct queries are fast and efficient
+
+---
+
 ### Implementation Checklist
 
 **Authentication Core**:
