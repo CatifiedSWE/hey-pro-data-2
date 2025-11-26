@@ -264,11 +264,12 @@ Optimization to prevent multiple loading screens:
 
 ### Protected Route Checklist
 Every protected page MUST implement:
-- ✅ Session check on mount
+- ✅ Session check on mount using `supabase.auth.getSession()`
 - ✅ Redirect to login if no session
-- ✅ Profile check if profile required
+- ✅ Profile check via direct Supabase query if profile required
 - ✅ Error handling with fallback redirect
 - ✅ Loading state during verification
+- ✅ Direct database queries using authenticated Supabase client
 
 ---
 
