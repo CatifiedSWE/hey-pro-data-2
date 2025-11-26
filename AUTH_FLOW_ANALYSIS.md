@@ -682,8 +682,8 @@ if (authVerified === 'true') {
 **Security**:
 - ✅ Session checks on all protected routes
 - ✅ Profile completion verification
-- ✅ API token authentication
-- ✅ RLS policies in database
+- ✅ Direct Supabase client authentication (client-side)
+- ✅ RLS policies in database (server-side enforcement)
 - ✅ Duplicate profile prevention
 
 ---
