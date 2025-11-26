@@ -211,15 +211,11 @@ useEffect(() => {
 - Ensures data integrity
 - Guides user through onboarding
 
-**Layer 3: API Authentication** (from backend)
-- All API routes check JWT token from Authorization header
-- Token extracted using `createAuthenticatedClient(request)`
-- Returns 401 if token missing or invalid
-
-**Layer 4: Database RLS (Row-Level Security)**
-- Supabase enforces RLS policies
+**Layer 3: Database RLS (Row-Level Security)**
+- Supabase enforces RLS policies at database level
 - Users can only access their own data
-- Additional security layer beyond application logic
+- Automatic security through authenticated user context
+- No custom API layer needed - direct client-to-Supabase calls
 
 ### Session Persistence Strategy
 
