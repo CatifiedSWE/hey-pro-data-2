@@ -739,12 +739,14 @@ USING (auth.uid() = user_id);
 - ✅ User-friendly error messages
 - ✅ Loading states
 
-**Security**:
+**Security & Data Access**:
 - ✅ Session checks on all protected routes
 - ✅ Profile completion verification
 - ✅ Direct Supabase client authentication (client-side)
 - ✅ RLS policies in database (server-side enforcement)
 - ✅ Duplicate profile prevention
+- ✅ Direct database queries using authenticated Supabase client
+- ✅ No custom API layer needed
 
 ---
 
