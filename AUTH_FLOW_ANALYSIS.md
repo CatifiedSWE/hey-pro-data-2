@@ -1,5 +1,7 @@
 # Authentication Flow Analysis - HeyProData
 
+> **Architecture Note**: This authentication system uses **direct client-to-Supabase** communication without custom API routes. All authentication, session management, and database operations are handled via the Supabase JavaScript client SDK. Security is enforced through Supabase's built-in Row-Level Security (RLS) policies at the database level.
+
 ## Table of Contents
 1. [Routing Logic](#routing-logic)
 2. [Unauthorized Access Prevention](#unauthorized-access-prevention)
