@@ -771,12 +771,14 @@ if (authVerified === 'true') {
 
 ### Key Takeaways
 
-1. **Multi-Layer Security**: Client-side guards + API auth + RLS
-2. **Smart Routing**: Always route based on current auth state
-3. **Session Optimization**: One-time check prevents UX issues
-4. **Storage Strategy**: Adaptive storage supports both persistence modes
-5. **Error Isolation**: Profile errors don't block authentication
-6. **Field Name Accuracy**: Use correct DB column names (first_name, not legal_first_name)
+1. **Direct Client-to-Supabase Architecture**: No custom API layer needed - all auth handled via Supabase client SDK
+2. **Multi-Layer Security**: Client-side guards + Database RLS policies
+3. **Smart Routing**: Always route based on current auth state
+4. **Session Optimization**: One-time check prevents UX issues
+5. **Storage Strategy**: Adaptive storage supports both persistence modes
+6. **Error Isolation**: Profile errors don't block authentication
+7. **Field Name Accuracy**: Use correct DB column names (first_name, not legal_first_name)
+8. **RLS as Primary Security**: Database-level security enforces access control automatically
 
 ---
 
