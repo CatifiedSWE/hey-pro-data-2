@@ -657,35 +657,6 @@ if (authVerified === 'true') {
 
 ---
 
-### Step 10: API Authentication Setup
-**File**: `/app/lib/supabaseServer.js`
-
-```javascript
-// Create helper function:
-export const createAuthenticatedClient = (request) => {
-  // Extract token from Authorization header
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  
-  if (!token) return null
-  
-  // Create Supabase client with token
-  return createClient(url, key, {
-    global: {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  })
-}
-
-// Use in API routes:
-const supabase = createAuthenticatedClient(request)
-if (!supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-```
-
-**Why**: Ensures API routes validate JWT tokens properly.
-
----
-
 ### Implementation Checklist
 
 **Authentication Core**:
